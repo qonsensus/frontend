@@ -21,7 +21,6 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  console.log(to)
   if (to.meta.noAuth) return
   const { isAuthenticated } = useAuthToken()
   if (!isAuthenticated()) return '/login'
