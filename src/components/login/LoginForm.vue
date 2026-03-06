@@ -11,7 +11,7 @@
             <VeeField name="email" v-slot="{ field, errors }">
               <Field :data-invalid="!!errors.length">
                 <FieldLabel>Email</FieldLabel>
-                <Input type="email" v-bind="field" />
+                <Input type="email" v-bind="field" :disabled="loading" />
                 <FieldError v-if="errors.length" :errors="errors" />
               </Field>
             </VeeField>
@@ -20,7 +20,7 @@
             <VeeField name="password" v-slot="{ field, errors }">
               <Field :data-invalid="!!errors.length">
                 <FieldLabel>Password</FieldLabel>
-                <Input type="password" v-bind="field" />
+                <Input type="password" v-bind="field" :disabled="loading" />
                 <FieldError v-if="errors.length" :errors="errors" />
               </Field>
             </VeeField>
@@ -28,8 +28,10 @@
         </div>
       </CardContent>
       <CardFooter class="flex flex-col gap-2">
-        <Button class="w-full"> Login</Button>
-        <Button variant="outline" class="w-full"> Login with Google</Button>
+        <Button class="w-full" type="submit" :disabled="loading"> Login </Button>
+        <Button variant="outline" type="button" class="w-full" :disabled="loading">
+          Register
+        </Button>
       </CardFooter>
     </Card>
   </form>
@@ -50,17 +52,17 @@ import * as z from 'zod'
 import { useForm, Field as VeeField } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { useApi } from '@/composables/useApi.ts'
+import { ref } from 'vue'
+import type { components } from '@/types/dtos.ts'
+import { useAuthToken } from '@/composables/useAuthToken.ts'
+import router from '@/router'
+
+const loading = ref(false)
 
 const schema = z.object({
   email: z.string().email('Must be a valid email address'),
-  // Minimum 8 characters, at least one uppercase letter, one lowercase letter, one number and one special character
-  password: z
-    .string()
-    .min(8)
-    .regex(/(?=.*[a-z])/, 'Password must contain at least one lowercase letter')
-    .regex(/(?=.*[A-Z])/, 'Password must contain at least one uppercase letter')
-    .regex(/(?=.*\d)/, 'Password must contain at least one number')
-    .regex(/(?=.*[!@#$%^&*()_+{}:"<>?])/, 'Password must contain at least one special character'),
+  password: z.string().min(1, 'Password is required'),
 })
 
 const { handleSubmit } = useForm({
@@ -71,7 +73,18 @@ const { handleSubmit } = useForm({
   },
 })
 
-const onSubmit = handleSubmit((values) => {
+const onSubmit = handleSubmit(async (values) => {
+  loading.value = true
+  const client = useApi()
   console.log(values)
+  const { data } = await client('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(values),
+  }).json<components['schemas']['TokenPair']>()
+  if (data.value?.accessToken) {
+    useAuthToken().setToken(data.value.accessToken)
+  }
+  loading.value = false
+  await router.push('/')
 })
 </script>
