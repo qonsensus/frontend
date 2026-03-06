@@ -7,18 +7,24 @@
       </CardHeader>
       <CardContent>
         <div class="grid w-full items-center gap-4">
-          <div class="flex flex-col space-y-1.5">
-            <VeeField name="email" v-slot="{ field, errors }" class="flex flex-col space-y-1.5">
-              <Label for="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" v-bind="field" />
+          <FieldGroup label="Email" name="email">
+            <VeeField name="email" v-slot="{ field, errors }">
+              <Field :data-invalid="!!errors.length">
+                <FieldLabel>Email</FieldLabel>
+                <Input type="email" v-bind="field" />
+                <FieldError v-if="errors.length" :errors="errors" />
+              </Field>
             </VeeField>
-          </div>
-          <div class="flex flex-col space-y-1.5">
+          </FieldGroup>
+          <FieldGroup label="Password" name="password">
             <VeeField name="password" v-slot="{ field, errors }">
-              <Label for="password">Password</Label>
-              <Input id="password" type="password" placeholder="********" v-bind="field" />
+              <Field :data-invalid="!!errors.length">
+                <FieldLabel>Password</FieldLabel>
+                <Input type="password" v-bind="field" />
+                <FieldError v-if="errors.length" :errors="errors" />
+              </Field>
             </VeeField>
-          </div>
+          </FieldGroup>
         </div>
       </CardContent>
       <CardFooter class="flex flex-col gap-2">
@@ -43,18 +49,18 @@ import { Button } from '@/components/ui/button'
 import * as z from 'zod'
 import { useForm, Field as VeeField } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { FieldGroup } from '@/components/ui/field'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 
 const schema = z.object({
-  email: z.string().email(),
+  email: z.string().email('Must be a valid email address'),
   // Minimum 8 characters, at least one uppercase letter, one lowercase letter, one number and one special character
   password: z
     .string()
     .min(8)
-    .regex(/(?=.*[a-z])/)
-    .regex(/(?=.*[A-Z])/)
-    .regex(/(?=.*\d)/)
-    .regex(/(?=.*[!@#$%^&*()_+{}:"<>?])/),
+    .regex(/(?=.*[a-z])/, 'Password must contain at least one lowercase letter')
+    .regex(/(?=.*[A-Z])/, 'Password must contain at least one uppercase letter')
+    .regex(/(?=.*\d)/, 'Password must contain at least one number')
+    .regex(/(?=.*[!@#$%^&*()_+{}:"<>?])/, 'Password must contain at least one special character'),
 })
 
 const { handleSubmit } = useForm({
