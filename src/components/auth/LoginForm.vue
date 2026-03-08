@@ -5,32 +5,26 @@
         <CardTitle>Login</CardTitle>
         <CardDescription> Please enter your credentials to login to your account.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div class="grid w-full items-center gap-4">
-          <FieldGroup label="Email" name="email">
-            <VeeField name="email" v-slot="{ field, errors }">
-              <Field :data-invalid="!!errors.length">
-                <FieldLabel>Email</FieldLabel>
-                <Input type="email" v-bind="field" :disabled="loading" />
-                <FieldError v-if="errors.length" :errors="errors" />
-              </Field>
-            </VeeField>
-          </FieldGroup>
-          <FieldGroup label="Password" name="password">
-            <VeeField name="password" v-slot="{ field, errors }">
-              <Field :data-invalid="!!errors.length">
-                <FieldLabel>Password</FieldLabel>
-                <Input type="password" v-bind="field" :disabled="loading" />
-                <FieldError v-if="errors.length" :errors="errors" />
-              </Field>
-            </VeeField>
-          </FieldGroup>
-        </div>
+      <CardContent class="flex flex-col gap-4">
+        <VeeField name="email" v-slot="{ field, errors }">
+          <Field :data-invalid="!!errors.length">
+            <FieldLabel>Email</FieldLabel>
+            <Input type="email" v-bind="field" :disabled="loading" />
+            <FieldError v-if="errors.length" :errors="errors" />
+          </Field>
+        </VeeField>
+        <VeeField name="password" v-slot="{ field, errors }">
+          <Field :data-invalid="!!errors.length">
+            <FieldLabel>Password</FieldLabel>
+            <Input type="password" v-bind="field" :disabled="loading" />
+            <FieldError v-if="errors.length" :errors="errors" />
+          </Field>
+        </VeeField>
       </CardContent>
       <CardFooter class="flex flex-col gap-2">
         <Button class="w-full" type="submit" :disabled="loading"> Login </Button>
-        <Button variant="outline" type="button" class="w-full" :disabled="loading">
-          Register
+        <Button variant="outline" type="button" class="w-full" :disabled="loading" as-child>
+          <RouterLink to="/register">Don't have an account? Register</RouterLink>
         </Button>
       </CardFooter>
     </Card>
@@ -51,7 +45,7 @@ import { Button } from '@/components/ui/button'
 import * as z from 'zod'
 import { useForm, Field as VeeField } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { useApi } from '@/composables/useApi.ts'
 import { ref } from 'vue'
 import type { components } from '@/types/dtos.ts'
