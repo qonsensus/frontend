@@ -1,5 +1,5 @@
 <template>
-  <form class="w-full max-w-md" @submit="onSubmit">
+  <form class="w-full max-w-lg" @submit="onSubmit">
     <Card class="w-full">
       <CardHeader>
         <CardTitle>Register</CardTitle>
@@ -32,8 +32,8 @@
       </CardContent>
       <CardFooter class="flex flex-col gap-2">
         <Button type="submit" class="w-full">Register</Button>
-        <Button type="button" variant="outline" class="w-full">
-          Already have an account? Login
+        <Button type="button" variant="outline" class="w-full" asChild>
+          <RouterLink to="/login">Already have an account? Log in</RouterLink>
         </Button>
       </CardFooter>
     </Card>
