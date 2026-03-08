@@ -56,6 +56,10 @@ import { useForm } from 'vee-validate'
 import { FieldError, FieldLabel, Field } from '@/components/ui/field'
 import { Field as VeeField } from 'vee-validate'
 import { Input } from '@/components/ui/input'
+import { toTypedSchema } from '@vee-validate/zod'
+import router from '@/router'
+import { useApi } from '@/composables/utils/useApi.ts'
+import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
 
 type RegisterUserDTO = components['schemas']['RegisterUserDto']
 
@@ -76,10 +80,27 @@ const zodSchema = z
     path: ['passwordConfirmation'],
   })
 
-const { handleSubmit } = useForm<RegisterUserDTO>()
+const { handleSubmit } = useForm<RegisterUserDTO>({
+  validationSchema: toTypedSchema(zodSchema),
+  initialValues: {
+    email: '',
+    password: '',
+    passwordConfirmation: '',
+  },
+})
 
-const onSubmit = handleSubmit((values) => {
-  console.log(values)
+const onSubmit = handleSubmit(async (values) => {
+  const client = useApi()
+  const { data } = await client('/user')
+    .post(values)
+    .json<components['schemas']['RegistrationResponseDto']>()
+  if (!data.value?.tokenPair.accessToken) {
+    console.error('Registration failed: No access token received')
+    return
+  }
+  useAuthToken().setToken(data.value.tokenPair.accessToken)
+  console.log('Auth State: ', useAuthToken().isAuthenticated())
+  await router.push('/')
 })
 </script>
 

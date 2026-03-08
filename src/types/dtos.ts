@@ -312,6 +312,15 @@ export interface components {
             password: string;
             passwordConfirmation: string;
         };
+        TokenPair: {
+            accessToken: string;
+            refreshToken: string;
+            expiresIn: number;
+        };
+        RegistrationResponseDto: {
+            profile: components["schemas"]["Profile"];
+            tokenPair: components["schemas"]["TokenPair"];
+        };
         UpdateProfileDto: {
             /**
              * @description The user's biography or personal description. This field allows users to provide a brief introduction about themselves, their interests, or any other information they wish to share. It is typically displayed on the user's profile page and can be updated by the user at any time.
@@ -332,11 +341,6 @@ export interface components {
         LoginDto: {
             email: string;
             password: string;
-        };
-        TokenPair: {
-            accessToken: string;
-            refreshToken: string;
-            expiresIn: number;
         };
         RefreshDto: {
             refreshToken: string;
@@ -513,7 +517,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["User"];
+                    "application/json": components["schemas"]["RegistrationResponseDto"];
                 };
             };
             /** @description Bad Request - If the password and confirmation do not match, or if the email is already in use. */

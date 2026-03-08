@@ -46,11 +46,11 @@ import * as z from 'zod'
 import { useForm, Field as VeeField } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
-import { useApi } from '@/composables/useApi.ts'
 import { ref } from 'vue'
 import type { components } from '@/types/dtos.ts'
-import { useAuthToken } from '@/composables/useAuthToken.ts'
 import router from '@/router'
+import { useApi } from '@/composables/utils/useApi.ts'
+import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
 
 const loading = ref(false)
 
