@@ -2,14 +2,16 @@
   <div class="h-full w-18 border-r flex flex-col items-center">
     <div class="grow" />
     <div class="flex flex-col items-center border-t gap-4 py-4 w-full">
-      <Avatar
-        class="border flex items-center justify-center w-11 h-11 hover:bg-accent transition-colors cursor-pointer"
-      >
-        <AvatarImage :src="user?.avatarUrl || 'none'" />
-        <AvatarFallback class="flex items-center justify-center text-primary">
-          <User />
-        </AvatarFallback>
-      </Avatar>
+      <RouterLink to="/settings/profile">
+        <Avatar
+          class="border flex items-center justify-center w-11 h-11 hover:bg-accent transition-colors cursor-pointer"
+        >
+          <AvatarImage :src="user?.avatarUrl || 'none'" />
+          <AvatarFallback class="flex items-center justify-center text-primary">
+            <User />
+          </AvatarFallback>
+        </Avatar>
+      </RouterLink>
       <ButtonGroup orientation="vertical">
         <Button variant="outline" size="icon-lg" @click="isMicOn = !isMicOn">
           <Mic v-if="isMicOn" />
