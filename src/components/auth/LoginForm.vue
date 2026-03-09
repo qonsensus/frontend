@@ -69,12 +69,17 @@ const { handleSubmit } = useForm({
 
 const onSubmit = handleSubmit(async (values) => {
   loading.value = true
-  const response = await useAuthService().login(values)
-  if (response.accessToken) {
-    useAuthToken().setToken(response.accessToken)
+  try {
+    const response = await useAuthService().login(values)
+    if (response.accessToken) {
+      useAuthToken().setToken(response.accessToken)
+    }
+    await useUserStore().fetchUser()
+  } catch (e) {
+    throw e
+  } finally {
+    loading.value = false
   }
-  await useUserStore().fetchUser()
-  loading.value = false
   await router.push('/')
 })
 </script>

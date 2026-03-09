@@ -1,5 +1,7 @@
 import type { components } from '@/types/dtos.ts'
 import { useApi } from '@/composables/utils/useApi.ts'
+import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
+import router from '@/router'
 
 export function useAuthService() {
   async function login(
@@ -13,5 +15,10 @@ export function useAuthService() {
     return data.value
   }
 
-  return { login }
+  async function logout() {
+    useAuthToken().clearToken()
+    await router.push('/login')
+  }
+
+  return { login, logout }
 }

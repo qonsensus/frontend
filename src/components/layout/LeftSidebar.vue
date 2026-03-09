@@ -25,21 +25,26 @@
       <Button variant="outline" size="icon-lg">
         <Settings />
       </Button>
+      <Button variant="destructive" size="icon-lg" @click="logout()">
+        <LogOut />
+      </Button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Settings, Mic, MicOff, Headphones, HeadphoneOff, User } from 'lucide-vue-next'
+import { Settings, Mic, MicOff, Headphones, HeadphoneOff, User, LogOut } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import { ref } from 'vue'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { useUserStore } from '@/stores/user.ts'
+import { useAuthService } from '@/composables/services/useAuthService.ts'
 
 const { user } = useUserStore()
 const isMicOn = ref(true)
 const isHeadphonesOn = ref(true)
+const { logout } = useAuthService()
 </script>
 
 <style scoped></style>
