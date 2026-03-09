@@ -100,7 +100,7 @@ const onSubmit = handleSubmit(async (values) => {
   }
   useAuthToken().setToken(data.value.tokenPair.accessToken)
   console.log('Auth State: ', useAuthToken().isAuthenticated())
-  await router.push('/')
+  await router.push('/profile/initial')
 })
 </script>
 

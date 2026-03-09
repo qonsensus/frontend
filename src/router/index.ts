@@ -25,6 +25,11 @@ const router = createRouter({
         noAuth: true,
       },
     },
+    {
+      path: '/profile/initial',
+      name: 'InitialProfileConfiguration',
+      component: () => import('@/views/InitialProfileConfigurationView.vue'),
+    },
   ],
 })
 
@@ -36,6 +41,10 @@ router.beforeEach(async (to) => {
       path: '/login',
       query: { redirect: to.fullPath },
     }
+})
+
+router.beforeEach(async (to, from) => {
+  if (to.path === '/profile/initial' && from.path !== '/register') return false
 })
 
 export default router
