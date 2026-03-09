@@ -60,6 +60,7 @@ import { toTypedSchema } from '@vee-validate/zod'
 import router from '@/router'
 import { useApi } from '@/composables/utils/useApi.ts'
 import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
+import { useUserStore } from '@/stores/user.ts'
 
 type RegisterUserDTO = components['schemas']['RegisterUserDto']
 
@@ -99,7 +100,7 @@ const onSubmit = handleSubmit(async (values) => {
     return
   }
   useAuthToken().setToken(data.value.tokenPair.accessToken)
-  console.log('Auth State: ', useAuthToken().isAuthenticated())
+  await useUserStore().fetchUser()
   await router.push('/profile/initial')
 })
 </script>

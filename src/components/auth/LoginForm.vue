@@ -51,6 +51,7 @@ import type { components } from '@/types/dtos.ts'
 import router from '@/router'
 import { useApi } from '@/composables/utils/useApi.ts'
 import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
+import { useUserStore } from '@/stores/user.ts'
 
 const loading = ref(false)
 
@@ -78,6 +79,7 @@ const onSubmit = handleSubmit(async (values) => {
   if (data.value?.accessToken) {
     useAuthToken().setToken(data.value.accessToken)
   }
+  await useUserStore().fetchUser()
   loading.value = false
   await router.push('/')
 })
