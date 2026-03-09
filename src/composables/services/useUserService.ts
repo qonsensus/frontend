@@ -14,7 +14,7 @@ export function useUserService() {
   ): Promise<components['schemas']['Profile']> {
     const client = useApi(true)
     const { data } = await client('/user/me/profile')
-      .patch({ body: JSON.stringify(payload) })
+      .patch(payload)
       .json<components['schemas']['Profile']>()
     if (!data.value) throw new Error('No profile data')
     return data.value
