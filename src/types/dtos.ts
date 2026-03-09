@@ -20,66 +20,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/user/me/friendship/request/{friendId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Sends a friend request from the currently authenticated user to another user specified by their ID.
-         * @description This endpoint allows the currently authenticated user to send a friend request to another user by providing the target user's ID as a path parameter. The request must include a valid authentication token to access this endpoint. If the friend request is successfully sent, the newly created friendship entity representing the pending friend request is returned.
-         */
-        post: operations["UserController_sendFriendRequest"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/user/me/friendship/{friendshipId}/accept": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Accepts a pending friend request for the currently authenticated user.
-         * @description This endpoint allows the currently authenticated user to accept a pending friend request by providing the friendship ID as a path parameter. The request must include a valid authentication token to access this endpoint. If the friend request is successfully accepted, the updated friendship entity representing the accepted friendship is returned.
-         */
-        patch: operations["UserController_acceptFriendRequest"];
-        trace?: never;
-    };
-    "/user/me/friendship/{friendshipId}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Rejects a pending friend request for the currently authenticated user.
-         * @description This endpoint allows the currently authenticated user to reject a pending friend request by providing the friendship ID as a path parameter. The request must include a valid authentication token to access this endpoint. If the friend request is successfully rejected, the updated friendship entity representing the rejected friendship is returned.
-         */
-        patch: operations["UserController_rejectFriendRequest"];
-        trace?: never;
-    };
     "/user": {
         parameters: {
             query?: never;
@@ -188,18 +128,10 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        Profile: {
-            id: string;
-            /** Format: date-time */
-            updatedAt: string;
-            displayName: string;
-            bio?: string;
-            motd?: string;
-            /** @enum {string} */
-            status: "default" | "suspended" | "banned";
-            avatarUrl?: string;
-            bannerUrl?: string;
-            owner: components["schemas"]["User"];
+        RegisterUserDto: {
+            email: string;
+            password: string;
+            passwordConfirmation: string;
         };
         ChatChannelMessage: {
             id: string;
@@ -307,10 +239,18 @@ export interface components {
             sentFriendships: components["schemas"]["Friendship"][];
             receivedFriendships: components["schemas"]["Friendship"][];
         };
-        RegisterUserDto: {
-            email: string;
-            password: string;
-            passwordConfirmation: string;
+        Profile: {
+            id: string;
+            /** Format: date-time */
+            updatedAt: string;
+            displayName: string;
+            bio?: string;
+            motd?: string;
+            /** @enum {string} */
+            status: "default" | "suspended" | "banned";
+            avatarUrl?: string;
+            bannerUrl?: string;
+            owner: components["schemas"]["User"];
         };
         TokenPair: {
             accessToken: string;
@@ -370,132 +310,6 @@ export interface operations {
                 content: {
                     "application/json": string;
                 };
-            };
-        };
-    };
-    UserController_sendFriendRequest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                friendId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Friendship"];
-                };
-            };
-            /** @description Bad Request - If the specified friend ID is invalid or if a friend request already exists between the users. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized - If the user is not authenticated or if the authentication token is invalid. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not Found - If no user exists with the specified friend ID. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserController_acceptFriendRequest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                friendshipId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Friendship"];
-                };
-            };
-            /** @description Bad Request - If the specified friendship ID is invalid or if the friend request cannot be accepted. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized - If the user is not authenticated or if the authentication token is invalid. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not Found - If no friendship exists with the specified ID or if the friendship does not belong to the authenticated user. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserController_rejectFriendRequest: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                friendshipId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Friendship"];
-                };
-            };
-            /** @description Bad Request - If the specified friendship ID is invalid or if the friend request cannot be rejected. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized - If the user is not authenticated or if the authentication token is invalid. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not Found - If no friendship exists with the specified ID or if the friendship does not belong to the authenticated user. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
