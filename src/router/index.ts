@@ -43,8 +43,4 @@ router.beforeEach(async (to) => {
     }
 })
 
-router.beforeEach(async (to, from) => {
-  if (to.path === '/profile/initial' && from.path !== '/register') return false
-})
-
 export default router
