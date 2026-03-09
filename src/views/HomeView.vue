@@ -11,10 +11,15 @@
 import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
 import router from '@/router'
 import { Button } from '@/components/ui/button'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import type { components } from '@/types/dtos.ts'
+import { useUserService } from '@/composables/services/useUserService.ts'
 
-const profile = ref<components['schemas']['Profile']>(history.state.profile)
+type ProfileType = components['schemas']['Profile']
+
+const profile = ref<ProfileType | null>(null)
+
+onMounted(async () => (profile.value = await useUserService().getMyProfile()))
 
 function logout() {
   useAuthToken().clearToken()

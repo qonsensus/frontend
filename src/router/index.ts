@@ -31,7 +31,11 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   if (to.meta.noAuth) return
   const { isAuthenticated } = useAuthToken()
-  if (!isAuthenticated()) return '/login'
+  if (!isAuthenticated() && to.path !== '/login')
+    return {
+      path: '/login',
+      query: { redirect: to.fullPath },
+    }
 })
 
 export default router
