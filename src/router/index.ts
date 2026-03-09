@@ -5,6 +5,14 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/settings/profile',
+      name: 'ProfileSettings',
+      components: {
+        default: () => import('@/views/settings/ProfileSettingsView.vue'),
+        leftSidebar: () => import('@/components/layout/LeftSidebar.vue'),
+      },
+    },
+    {
       path: '/',
       name: 'Home',
       components: {

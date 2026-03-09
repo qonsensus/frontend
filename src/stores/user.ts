@@ -11,8 +11,13 @@ export const useUserStore = defineStore('UserStore', () => {
     user.value = await getMyProfile()
   }
 
+  function setUser(profile: components['schemas']['Profile']) {
+    user.value = profile
+  }
+
   return {
     user,
     fetchUser,
+    setUser,
   }
 })
