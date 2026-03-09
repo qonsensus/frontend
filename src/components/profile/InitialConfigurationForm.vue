@@ -16,6 +16,17 @@
             <FieldError v-if="errors.length" :errors="errors" />
           </Field>
         </VeeField>
+        <VeeField name="handle" v-slot="{ field, errors }">
+          <Field>
+            <FieldLabel>Handle</FieldLabel>
+            <Input v-bind="field" :data-invalid="!!errors.length" />
+            <FieldDescription>
+              This is your unique identifier on Qonsensus. It can only contain lowercase letters,
+              numbers, and underscores.
+            </FieldDescription>
+            <FieldError v-if="errors.length" :errors="errors" />
+          </Field>
+        </VeeField>
         <VeeField name="bio" v-slot="{ field, errors }">
           <Field>
             <FieldLabel>Bio</FieldLabel>
@@ -62,13 +73,13 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Field as VeeField } from 'vee-validate'
-import { Field, FieldError, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { watch } from 'vue'
 import { Button } from '@/components/ui/button'
-import { useUserService } from '@/composables/services/useUserService.ts'
 import router from '@/router'
+import { useProfileService } from '@/composables/services/useProfileService.ts'
 
 const props = defineProps<{
   profile: components['schemas']['Profile'] | null
@@ -81,14 +92,19 @@ const zodSchema = z.object({
     .min(4, 'Must be at least 4 characters long')
     .max(64, 'Must be at most 64 characters long'),
   motd: z.string().max(128, 'Must be at most 128 characters long'),
+  handle: z
+    .string()
+    .max(64, 'Must be at most 64 characters long')
+    .regex(/^[a-z0-9_]+$/, 'Can only contain lowercase letters, numbers, and underscores'),
 })
 
 const { handleSubmit, setValues } = useForm({
   validationSchema: toTypedSchema(zodSchema),
   initialValues: {
-    bio: props.profile?.bio ?? '',
-    displayName: props.profile?.displayName ?? '',
-    motd: props.profile?.motd ?? '',
+    bio: '',
+    displayName: '',
+    motd: '',
+    handle: '',
   },
 })
 
@@ -100,6 +116,7 @@ watch(
         bio: newProfile.bio ?? '',
         displayName: newProfile.displayName ?? '',
         motd: newProfile.motd ?? '',
+        handle: newProfile.handle ?? '',
       })
     }
   },
@@ -107,7 +124,7 @@ watch(
 )
 
 const onSubmit = handleSubmit(async (values) => {
-  const { updateMyProfile } = useUserService()
+  const { updateMyProfile } = useProfileService()
   await updateMyProfile(values)
   await router.push('/')
 })

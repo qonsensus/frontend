@@ -47,11 +47,10 @@ import { useForm, Field as VeeField } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { ref } from 'vue'
-import type { components } from '@/types/dtos.ts'
 import router from '@/router'
-import { useApi } from '@/composables/utils/useApi.ts'
 import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
 import { useUserStore } from '@/stores/user.ts'
+import { useAuthService } from '@/composables/services/useAuthService.ts'
 
 const loading = ref(false)
 
@@ -70,14 +69,9 @@ const { handleSubmit } = useForm({
 
 const onSubmit = handleSubmit(async (values) => {
   loading.value = true
-  const client = useApi()
-  console.log(values)
-  const { data } = await client('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify(values),
-  }).json<components['schemas']['TokenPair']>()
-  if (data.value?.accessToken) {
-    useAuthToken().setToken(data.value.accessToken)
+  const response = await useAuthService().login(values)
+  if (response.accessToken) {
+    useAuthToken().setToken(response.accessToken)
   }
   await useUserStore().fetchUser()
   loading.value = false

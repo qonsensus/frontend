@@ -40,50 +40,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/user/me/profile": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Retrieves the profile of the currently authenticated user.
-         * @description This endpoint allows clients to fetch the profile information of the currently authenticated user. The user's identity is determined from the authentication token included in the request. If the user is successfully authenticated, their profile information is returned.
-         */
-        get: operations["UserController_getMyProfile"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Updates the profile of the currently authenticated user.
-         * @description This endpoint allows clients to update the profile information of the currently authenticated user. The user's identity is determined from the authentication token included in the request. The request body should contain the new profile information (bio, display name, and MOTD). If the update is successful, the updated profile entity is returned.
-         */
-        patch: operations["UserController_updateMyProfile"];
-        trace?: never;
-    };
-    "/user/{id}/profile": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Retrieves the profile of a user by their ID.
-         * @description This endpoint allows clients to fetch the profile information of a user by providing their unique ID as a path parameter. The request must include a valid authentication token to access this endpoint. If the user with the specified ID exists and the requester is authenticated, the user's profile information is returned.
-         */
-        get: operations["UserController_getUserProfile"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -118,6 +74,53 @@ export interface paths {
          * @description This endpoint accepts a POST request with a refresh token, validates the token, and returns a new access token, new refresh token, and expiration time if the token is valid.
          */
         post: operations["AuthController_refreshToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/profile/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the profile of the currently authenticated user.
+         * @description This endpoint retrieves the profile information of the user making the request. The user's ID is extracted from the request object, and the corresponding profile is fetched from the database. If the user or profile is not found, an appropriate error response is returned.
+         *     @return The profile associated with the currently authenticated user.
+         */
+        get: operations["ProfileController_getMyProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update the profile of the currently authenticated user.
+         * @description This endpoint allows the user to update their profile information, such as display name, bio, message of the day (MOTD), and handle. The user's ID is extracted from the request object, and the provided profile data is validated and saved to the database. If the user or profile is not found, or if the provided handle is already taken by another profile, an appropriate error response is returned.
+         *     @return The updated profile after saving it to the database.
+         */
+        patch: operations["ProfileController_updateMyProfile"];
+        trace?: never;
+    };
+    "/profile/handle/exists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check if a given handle already exists in the system.
+         * @description This endpoint allows clients to check if a specific handle is already taken by another profile. The handle is provided as a query parameter, and the response indicates whether the handle exists or not. This can be useful for validating handle availability during profile creation or updates.
+         *     @return An object containing the handle and a boolean indicating whether it exists.
+         */
+        get: operations["ProfileController_handleExists"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -244,6 +247,7 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
             displayName: string;
+            handle: string;
             bio?: string;
             motd?: string;
             /** @enum {string} */
@@ -261,6 +265,13 @@ export interface components {
             profile: components["schemas"]["Profile"];
             tokenPair: components["schemas"]["TokenPair"];
         };
+        LoginDto: {
+            email: string;
+            password: string;
+        };
+        RefreshDto: {
+            refreshToken: string;
+        };
         UpdateProfileDto: {
             /**
              * @description The user's biography or personal description. This field allows users to provide a brief introduction about themselves, their interests, or any other information they wish to share. It is typically displayed on the user's profile page and can be updated by the user at any time.
@@ -277,13 +288,15 @@ export interface components {
              * @example Living life one bean at a time!
              */
             motd: string;
+            /**
+             * @description The user's handle is a unique identifier that can be used to mention or refer to the user within the platform. It is often used in URLs, mentions, and other contexts where a unique identifier is needed. The handle is typically chosen by the user and must be unique across the platform. It can be updated by the user, but care should be taken to ensure that it remains unique.
+             * @example beanlover123
+             */
+            handle: string;
         };
-        LoginDto: {
-            email: string;
-            password: string;
-        };
-        RefreshDto: {
-            refreshToken: string;
+        HandleExistsResponseDto: {
+            handle: string;
+            exists: boolean;
         };
     };
     responses: never;
@@ -343,118 +356,6 @@ export interface operations {
             };
         };
     };
-    UserController_getMyProfile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Profile"];
-                };
-            };
-            /** @description Unauthorized - If the user is not authenticated or if the authentication token is invalid. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not Found - If the user associated with the authentication token does not exist. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserController_updateMyProfile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateProfileDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Profile"];
-                };
-            };
-            /** @description Bad Request - If the provided profile information is invalid. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized - If the user is not authenticated or if the authentication token is invalid. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not Found - If the user associated with the authentication token does not exist. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserController_getUserProfile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Profile"];
-                };
-            };
-            /** @description Unauthorized - If the requester is not authenticated or if the authentication token is invalid. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not Found - If no user exists with the specified ID. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     AuthController_login: {
         parameters: {
             query?: never;
@@ -497,6 +398,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TokenPair"];
+                };
+            };
+        };
+    };
+    ProfileController_getMyProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            /** @description if the user or profile is not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProfileController_updateMyProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProfileDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            /** @description if the provided handle is already taken by another profile. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description if the user or profile is not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProfileController_handleExists: {
+        parameters: {
+            query: {
+                handle: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandleExistsResponseDto"];
                 };
             };
         };

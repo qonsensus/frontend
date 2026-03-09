@@ -15,6 +15,17 @@
             <FieldError v-if="errors.length" :errors="errors" />
           </Field>
         </VeeField>
+        <VeeField name="handle" v-slot="{ field, errors }">
+          <Field>
+            <FieldLabel>Handle</FieldLabel>
+            <Input v-bind="field" :aria-invalid="!!errors.length" />
+            <FieldDescription>
+              This is your unique identifier on Qonsensus. It can only contain lowercase letters,
+              numbers, and underscores.
+            </FieldDescription>
+            <FieldError v-if="errors.length" :errors="errors" />
+          </Field>
+        </VeeField>
         <VeeField name="bio" v-slot="{ field, errors }">
           <Field>
             <FieldLabel>Bio</FieldLabel>
@@ -54,24 +65,31 @@ import { Field as VeeField, useForm } from 'vee-validate'
 import { Input } from '@/components/ui/input'
 import { onMounted, ref, watch } from 'vue'
 import type { components } from '@/types/dtos.ts'
-import { useUserService } from '@/composables/services/useUserService.ts'
 import { z } from 'zod'
 import { toTypedSchema } from '@vee-validate/zod'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useUserStore } from '@/stores/user.ts'
 import router from '@/router'
+import { useProfileService } from '@/composables/services/useProfileService.ts'
 
 const userProfile = ref<components['schemas']['Profile'] | null>(null)
 
 onMounted(async () => {
-  userProfile.value = await useUserService().getMyProfile()
+  userProfile.value = await useProfileService().getMyProfile()
 })
 
 const zodSchema = z.object({
-  displayName: z.string().min(1, 'Display Name is required'),
+  displayName: z
+    .string()
+    .min(4, 'Must be at least 4 characters long')
+    .max(64, 'Must be at most 64 characters long'),
   bio: z.string().max(255, 'Must be at most 255 characters'),
-  motd: z.string().max(128, 'Must be at most 255 characters'),
+  motd: z.string().max(128, 'Must be at most 128 characters'),
+  handle: z
+    .string()
+    .max(64, 'Must be at most 64 characters long')
+    .regex(/^[a-z0-9_]+$/, 'Can only contain lowercase letters, numbers, and underscores'),
 })
 
 const { handleSubmit, setValues } = useForm({
@@ -86,6 +104,7 @@ watch(
         displayName: userProfile.value.displayName,
         bio: userProfile.value.bio || '',
         motd: userProfile.value.motd || '',
+        handle: userProfile.value.handle,
       })
     }
   },
@@ -93,7 +112,7 @@ watch(
 
 const onSubmit = handleSubmit(async (values) => {
   try {
-    const updatedUser = await useUserService().updateMyProfile(values)
+    const updatedUser = await useProfileService().updateMyProfile(values)
     useUserStore().setUser(updatedUser)
     router.back()
   } catch (error) {
