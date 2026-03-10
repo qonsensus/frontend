@@ -16,8 +16,30 @@ export function useProfileService() {
     return data.value
   }
 
+  async function getByHandle(handle: string): Promise<components['schemas']['Profile']> {
+    const client = useApi(true)
+    const urlParsedHandle = encodeURIComponent(handle)
+    const { data } = await client(`/profile/by-handle?handle=${urlParsedHandle}`)
+      .get()
+      .json<components['schemas']['Profile']>()
+    if (!data.value) throw new Error('No profile data')
+    return data.value
+  }
+
+  async function handleExists(handle: string): Promise<boolean> {
+    const client = useApi(true)
+    const urlParsedHandle = encodeURIComponent(handle)
+    const { data } = await client(`/profile/handle/exists?handle=${urlParsedHandle}`)
+      .get()
+      .json<components['schemas']['HandleExistsResponseDto']>()
+    if (!data.value) throw new Error('No handle exists data')
+    return data.value.exists
+  }
+
   return {
     getMyProfile,
     updateMyProfile,
+    getByHandle,
+    handleExists,
   }
 }

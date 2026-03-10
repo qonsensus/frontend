@@ -80,6 +80,147 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/friends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the list of friends for the authenticated user with pagination.
+         * @description This endpoint retrieves a paginated list of friends for the currently authenticated user. The user's ID is extracted from the request object, and the friends are fetched from the database based on that ID. The `top` query parameter specifies the number of friends to return per page (default is 20), and the `page` query parameter specifies the page number to retrieve (default is 1). The response includes an array of friendship list items, each containing information about a friend.
+         */
+        get: operations["FriendsController_getMyFriends"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/friends/outgoing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the list of outgoing friend requests for the authenticated user with pagination.
+         * @description This endpoint retrieves a paginated list of outgoing friend requests for the currently authenticated user. The user's ID is extracted from the request object, and the outgoing friend requests are fetched from the database based on that ID. The `top` query parameter specifies the number of friend requests to return per page (default is 20), and the `page` query parameter specifies the page number to retrieve (default is 1). The response includes an array of outgoing friendship request items, each containing information about the recipient of the friend request.
+         */
+        get: operations["FriendsController_getOutgoingFriendRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/friends/incoming": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the list of incoming friend requests for the authenticated user with pagination.
+         * @description This endpoint retrieves a paginated list of incoming friend requests for the currently authenticated user. The user's ID is extracted from the request object, and the incoming friend requests are fetched from the database based on that ID. The `top` query parameter specifies the number of friend requests to return per page (default is 20), and the `page` query parameter specifies the page number to retrieve (default is 1). The response includes an array of incoming friendship request items, each containing information about the requester of the friend request.
+         */
+        get: operations["FriendsController_getIncomingFriendRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/friends/request/{requestId}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Decline a friend request by its ID for the authenticated user.
+         * @description This endpoint allows the authenticated user to decline a specific friend request by providing the request ID as a path parameter. The user's ID is extracted from the request object, and the specified friend request is declined in the database. If the friend request does not exist or does not belong to the user, an appropriate error response is returned. Upon successful decline of the friend request, the updated Friendship entity is returned in the response.
+         */
+        delete: operations["FriendsController_declineFriendRequest"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/friends/request/{requestId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Accept a friend request by its ID for the authenticated user.
+         * @description This endpoint allows the authenticated user to accept a specific friend request by providing the request ID as a path parameter. The user's ID is extracted from the request object, and the specified friend request is accepted in the database. If the friend request does not exist or does not belong to the user, an appropriate error response is returned. Upon successful acceptance of the friend request, the updated Friendship entity with status ACCEPTED is returned in the response.
+         */
+        patch: operations["FriendsController_acceptFriendRequest"];
+        trace?: never;
+    };
+    "/friends/request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a friend request to another user by their ID.
+         * @description This endpoint allows the authenticated user to send a friend request to another user by providing the recipient's user ID as a query parameter. The user's ID is extracted from the request object, and a new friend request is created in the database with the status set to PENDING. If the recipient user does not exist or if there is already an existing friend request between the two users, an appropriate error response is returned. Upon successful creation of the friend request, the newly created Friendship entity is returned in the response.
+         */
+        post: operations["FriendsController_sendFriendRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/profile/by-handle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a user's profile by their handle.
+         * @description This endpoint retrieves a user's profile information based on their unique handle. The handle is provided as a query parameter, and the corresponding profile is fetched from the database. If no profile is found with the given handle, an appropriate error response is returned.
+         *     @return The profile associated with the provided handle.
+         */
+        get: operations["ProfileController_getProfileByHandle"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/profile/me": {
         parameters: {
             query?: never;
@@ -272,6 +413,27 @@ export interface components {
         RefreshDto: {
             refreshToken: string;
         };
+        FriendshipListItemDto: {
+            id: string;
+            /** Format: date-time */
+            friendsSince: string;
+            friendId: string;
+            friendProfile: components["schemas"]["Profile"];
+        };
+        OutgoingFrienshipRequestDto: {
+            id: string;
+            /** Format: date-time */
+            requestedAt: string;
+            recipientId: string;
+            recipientProfile: components["schemas"]["Profile"];
+        };
+        IncomingFrienshipRequestDto: {
+            id: string;
+            /** Format: date-time */
+            requestedAt: string;
+            requesterId: string;
+            requesterProfile: components["schemas"]["Profile"];
+        };
         UpdateProfileDto: {
             /**
              * @description The user's biography or personal description. This field allows users to provide a brief introduction about themselves, their interests, or any other information they wish to share. It is typically displayed on the user's profile page and can be updated by the user at any time.
@@ -399,6 +561,205 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TokenPair"];
                 };
+            };
+        };
+    };
+    FriendsController_getMyFriends: {
+        parameters: {
+            query: {
+                top: number;
+                page: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendshipListItemDto"][];
+                };
+            };
+        };
+    };
+    FriendsController_getOutgoingFriendRequests: {
+        parameters: {
+            query: {
+                top: number;
+                page: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OutgoingFrienshipRequestDto"][];
+                };
+            };
+        };
+    };
+    FriendsController_getIncomingFriendRequests: {
+        parameters: {
+            query: {
+                top: number;
+                page: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomingFrienshipRequestDto"][];
+                };
+            };
+        };
+    };
+    FriendsController_declineFriendRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Friendship"];
+                };
+            };
+            /** @description if the friend request is not in a pending state. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description if the friend request does not exist or does not belong to the user. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FriendsController_acceptFriendRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Friendship"];
+                };
+            };
+            /** @description if the friend request is not in a pending state. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description if the friend request does not exist or does not belong to the user. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FriendsController_sendFriendRequest: {
+        parameters: {
+            query: {
+                recipientId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Friendship"];
+                };
+            };
+            /** @description if there is already an existing friend request between the two users. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description if the recipient user does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ProfileController_getProfileByHandle: {
+        parameters: {
+            query: {
+                handle: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
+            };
+            /** @description if no profile is found with the given handle. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
