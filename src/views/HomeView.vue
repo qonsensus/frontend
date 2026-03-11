@@ -1,22 +1,29 @@
 <template>
-  <div class="flex flex-col h-full w-full p-4">
-    <Tabs default-value="recentChats" class="flex flex-col h-full gap-4">
-      <TabsList class="w-full">
-        <TabsTrigger value="recentChats">Recent Chats</TabsTrigger>
-        <TabsTrigger value="online">Online</TabsTrigger>
-        <TabsTrigger value="friends">Friends</TabsTrigger>
-      </TabsList>
-      <div class="h-full">
-        <TabsContent value="recentChats">Recent Chats</TabsContent>
-        <TabsContent value="online">Online</TabsContent>
-        <TabsContent value="friends">Friends</TabsContent>
-      </div>
-    </Tabs>
+  <div class="flex-1 flex flex-col h-full p-4">
+    <div class="flex gap-2 w-full">
+      <Input placeholder="Search" class="flex-1" />
+      <Button variant="outline">Search</Button>
+      <Button size="icon">
+        <UserPlus />
+      </Button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import type { components } from '@/types/dtos.ts'
+import { onMounted, ref } from 'vue'
+import { useFriendsService } from '@/composables/services/useFriendsService.ts'
+import { UserPlus } from 'lucide-vue-next'
+
+const friends = ref<components['schemas']['FriendshipListItemDto'][]>()
+
+onMounted(async () => {
+  const { getFriends } = useFriendsService()
+  friends.value = await getFriends()
+})
 </script>
 
 <style scoped></style>

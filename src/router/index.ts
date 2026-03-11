@@ -18,6 +18,7 @@ const router = createRouter({
       components: {
         default: () => import('@/views/HomeView.vue'),
         leftSidebar: () => import('@/components/layout/LeftSidebar.vue'),
+        leftSecondarySidebar: () => import('@/components/layout/LeftSecondaryHomeSidebar.vue'),
       },
     },
     {
