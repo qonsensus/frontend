@@ -3,9 +3,7 @@
     <div class="flex gap-2 w-full">
       <Input placeholder="Search" class="flex-1" />
       <Button variant="outline">Search</Button>
-      <Button size="icon">
-        <UserPlus />
-      </Button>
+      <AddFriendButton />
     </div>
   </div>
 </template>
@@ -17,6 +15,7 @@ import type { components } from '@/types/dtos.ts'
 import { onMounted, ref } from 'vue'
 import { useFriendsService } from '@/composables/services/useFriendsService.ts'
 import { UserPlus } from 'lucide-vue-next'
+import AddFriendButton from '@/components/AddFriendButton.vue'
 
 const friends = ref<components['schemas']['FriendshipListItemDto'][]>()
 

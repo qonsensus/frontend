@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import type { components } from '@/types/dtos.ts'
-import InitialConfigurationForm from '@/components/profile/InitialConfigurationForm.vue'
+import InitialConfigurationForm from '@/components/InitialConfigurationForm.vue'
 import { useProfileService } from '@/composables/services/useProfileService.ts'
 
 const profile = ref<components['schemas']['Profile'] | null>(null)

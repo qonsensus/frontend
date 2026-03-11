@@ -9,7 +9,7 @@ const router = createRouter({
       name: 'ProfileSettings',
       components: {
         default: () => import('@/views/settings/ProfileSettingsView.vue'),
-        leftSidebar: () => import('@/components/layout/LeftSidebar.vue'),
+        leftSidebar: () => import('@/components/LeftSidebar.vue'),
       },
     },
     {
@@ -17,8 +17,8 @@ const router = createRouter({
       name: 'Home',
       components: {
         default: () => import('@/views/HomeView.vue'),
-        leftSidebar: () => import('@/components/layout/LeftSidebar.vue'),
-        leftSecondarySidebar: () => import('@/components/layout/LeftSecondaryHomeSidebar.vue'),
+        leftSidebar: () => import('@/components/LeftSidebar.vue'),
+        leftSecondarySidebar: () => import('@/components/LeftSecondaryHomeSidebar.vue'),
       },
     },
     {
