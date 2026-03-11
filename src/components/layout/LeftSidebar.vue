@@ -1,6 +1,14 @@
 <template>
   <div class="h-full w-18 border-r flex flex-col items-center">
-    <div class="grow" />
+    <div class="flex-1 w-full min-h-0">
+      <ScrollArea class="h-full w-full">
+        <div class="flex flex-col items-center gap-2 py-4">
+          <Button variant="outline" size="icon-lg">
+            <House />
+          </Button>
+        </div>
+      </ScrollArea>
+    </div>
     <div class="flex flex-col items-center border-t gap-4 py-4 w-full">
       <RouterLink to="/settings/profile">
         <Avatar
@@ -33,13 +41,23 @@
 </template>
 
 <script setup lang="ts">
-import { Settings, Mic, MicOff, Headphones, HeadphoneOff, User, LogOut } from 'lucide-vue-next'
+import {
+  Settings,
+  Mic,
+  MicOff,
+  Headphones,
+  HeadphoneOff,
+  User,
+  LogOut,
+  House,
+} from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import { ref } from 'vue'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { useUserStore } from '@/stores/user.ts'
 import { useAuthService } from '@/composables/services/useAuthService.ts'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 const { user } = useUserStore()
 const isMicOn = ref(true)
