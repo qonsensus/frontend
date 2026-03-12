@@ -7,26 +7,23 @@
     </DialogTrigger>
     <DialogContent class="sm:max-w-[425px] min-w-4xl">
       <DialogHeader>
-        <DialogTitle>Edit profile</DialogTitle>
+        <DialogTitle>Add Friend</DialogTitle>
         <DialogDescription>
-          Make changes to your profile here. Click save when you're done.
+          Search for your friend's profile and send them a friend request!
         </DialogDescription>
       </DialogHeader>
-      <div class="grid gap-4">
-        <div class="grid gap-3">
-          <Label for="name-1">Name</Label>
-          <Input id="name-1" name="name" default-value="Pedro Duarte" />
-        </div>
-        <div class="grid gap-3">
-          <Label for="username-1">Username</Label>
-          <Input id="username-1" name="username" default-value="@peduarte" />
-        </div>
-      </div>
+      <Input
+        placeholder="Search for a user by their handle..."
+        @input="search($event.target.value)"
+      />
+      <ProfileCard :profile="foundProfile" />
       <DialogFooter>
-        <DialogClose as-child>
-          <Button variant="outline"> Cancel </Button>
-        </DialogClose>
-        <Button type="submit"> Save changes </Button>
+        <div class="w-full flex flex-col gap-2">
+          <Button type="submit" class="w-full"> Add Friend </Button>
+          <DialogClose as-child>
+            <Button variant="outline" class="w-full"> Cancel </Button>
+          </DialogClose>
+        </div>
       </DialogFooter>
     </DialogContent>
   </Dialog>
@@ -37,15 +34,25 @@ import { UserPlus } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
 } from '@/components/ui/dialog'
+import ProfileCard from '@/components/ProfileCard.vue'
+import { ref } from 'vue'
 import { Input } from '@/components/ui/input'
+import { useDebounceFn } from '@vueuse/core'
+import type { components } from '@/types/dtos.ts'
+import { useProfileService } from '@/composables/services/useProfileService.ts'
+
+const foundProfile = ref<components['schemas']['Profile'] | null>(null)
+const search = useDebounceFn(async (searchQuery: string) => {
+  foundProfile.value = await useProfileService().getByHandle(searchQuery)
+}, 500)
 </script>
 
 <style scoped></style>
