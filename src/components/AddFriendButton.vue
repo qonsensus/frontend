@@ -1,11 +1,11 @@
 <template>
-  <Dialog>
+  <Dialog @update:open="(val) => (val ? (foundProfile = null) : null)">
     <DialogTrigger asChild>
       <Button size="icon">
         <UserPlus />
       </Button>
     </DialogTrigger>
-    <DialogContent class="sm:max-w-[425px] min-w-4xl">
+    <DialogContent class="sm:max-w-100 min-w-4xl">
       <DialogHeader>
         <DialogTitle>Add Friend</DialogTitle>
         <DialogDescription>
@@ -48,10 +48,18 @@ import { Input } from '@/components/ui/input'
 import { useDebounceFn } from '@vueuse/core'
 import type { components } from '@/types/dtos.ts'
 import { useProfileService } from '@/composables/services/useProfileService.ts'
+import { useUserStore } from '@/stores/user.ts'
+import { storeToRefs } from 'pinia'
 
 const foundProfile = ref<components['schemas']['Profile'] | null>(null)
 const search = useDebounceFn(async (searchQuery: string) => {
-  foundProfile.value = await useProfileService().getByHandle(searchQuery)
+  const result = await useProfileService().getByHandle(searchQuery)
+  const currentUserId = storeToRefs(useUserStore()).user.value?.id
+  if (result && result.id !== currentUserId) {
+    foundProfile.value = result
+  } else {
+    foundProfile.value = null
+  }
 }, 500)
 </script>
 
