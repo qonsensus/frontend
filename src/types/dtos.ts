@@ -396,6 +396,7 @@ export interface components {
             avatarUrl?: string;
             bannerUrl?: string;
             owner: components["schemas"]["User"];
+            ownerId: string;
         };
         TokenPair: {
             accessToken: string;

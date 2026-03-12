@@ -1,5 +1,5 @@
 <template>
-  <Dialog @update:open="(val) => (val ? (foundProfile = null) : null)">
+  <Dialog v-model:open="open">
     <DialogTrigger asChild>
       <Button size="icon">
         <UserPlus />
@@ -19,9 +19,11 @@
       <ProfileCard :profile="foundProfile" />
       <DialogFooter>
         <div class="w-full flex flex-col gap-2">
-          <Button type="submit" class="w-full"> Add Friend </Button>
+          <Button class="w-full" :disabled="!foundProfile || loading" @click="sendFriendRequest">
+            Add Friend
+          </Button>
           <DialogClose as-child>
-            <Button variant="outline" class="w-full"> Cancel </Button>
+            <Button variant="outline" class="w-full" :disabled="loading"> Cancel </Button>
           </DialogClose>
         </div>
       </DialogFooter>
@@ -50,7 +52,10 @@ import type { components } from '@/types/dtos.ts'
 import { useProfileService } from '@/composables/services/useProfileService.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { storeToRefs } from 'pinia'
+import { useFriendsService } from '@/composables/services/useFriendsService.ts'
 
+const loading = ref(false)
+const open = ref(false)
 const foundProfile = ref<components['schemas']['Profile'] | null>(null)
 const search = useDebounceFn(async (searchQuery: string) => {
   const result = await useProfileService().getByHandle(searchQuery)
@@ -61,6 +66,14 @@ const search = useDebounceFn(async (searchQuery: string) => {
     foundProfile.value = null
   }
 }, 500)
+
+async function sendFriendRequest() {
+  if (!foundProfile.value) return
+  loading.value = true
+  await useFriendsService().sendFriendRequest(foundProfile.value.ownerId)
+  loading.value = false
+  open.value = false
+}
 </script>
 
 <style scoped></style>
