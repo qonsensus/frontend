@@ -5,16 +5,22 @@
       v-model:selected-tab="selectedTab"
     />
     <div class="flex-1 min-h-0 gap-4 flex">
-      {{ selectedTab }}
+      <IncomingFriendRequestsList
+        :incoming-friend-requests="incomingFriendRequests || []"
+        v-show="selectedTab === 'incomingFriendRequests'"
+      />
+      <FriendsList :friends="friends || []" v-show="selectedTab === 'allFriends'" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import type { components } from '@/types/dtos.ts'
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useFriendsService } from '@/composables/services/useFriendsService.ts'
 import HomeViewHeader from '@/components/HomeViewHeader.vue'
+import IncomingFriendRequestsList from '@/components/IncomingFriendRequestsList.vue'
+import FriendsList from '@/components/FriendsList.vue'
 
 const friends = ref<components['schemas']['FriendshipListItemDto'][]>()
 const incomingFriendRequests = ref<components['schemas']['IncomingFrienshipRequestDto'][]>()

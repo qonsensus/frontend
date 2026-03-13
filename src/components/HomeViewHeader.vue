@@ -16,7 +16,7 @@
       <ToggleGroupItem value="allFriends">
         <Users />
       </ToggleGroupItem>
-      <ToggleGroupItem value="friendRequests">
+      <ToggleGroupItem value="incomingFriendRequests">
         <Inbox />
         <Badge class="text-xs" v-if="incomingFriendRequestCount > 0">
           {{ incomingFriendRequestCount }}
