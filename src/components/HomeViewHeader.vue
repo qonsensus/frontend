@@ -18,7 +18,9 @@
       </ToggleGroupItem>
       <ToggleGroupItem value="friendRequests">
         <Inbox />
-        <Badge class="text-xs">69</Badge>
+        <Badge class="text-xs" v-if="incomingFriendRequestCount > 0">
+          {{ incomingFriendRequestCount }}
+        </Badge>
       </ToggleGroupItem>
     </ToggleGroup>
     <InputGroup>
@@ -47,4 +49,7 @@ import { Search, UserCheck, Users, Inbox } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
 
 const model = defineModel<string>('selectedTab', { required: true })
+const props = defineProps<{
+  incomingFriendRequestCount: number
+}>()
 </script>
