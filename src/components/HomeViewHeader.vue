@@ -13,8 +13,12 @@
       <ToggleGroupItem value="onlineFriends">
         <UserCheck />
       </ToggleGroupItem>
-      <ToggleGroupItem value="friendRequests">
+      <ToggleGroupItem value="allFriends">
         <Users />
+      </ToggleGroupItem>
+      <ToggleGroupItem value="friendRequests">
+        <Inbox />
+        <Badge class="text-xs">69</Badge>
       </ToggleGroupItem>
     </ToggleGroup>
     <InputGroup>
@@ -39,7 +43,8 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@/components/ui/input-group'
-import { Search, UserCheck, Users } from 'lucide-vue-next'
+import { Search, UserCheck, Users, Inbox } from 'lucide-vue-next'
+import { Badge } from '@/components/ui/badge'
 
 const model = defineModel<string>('selectedTab', { required: true })
 </script>

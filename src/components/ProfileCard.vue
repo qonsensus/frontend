@@ -7,10 +7,11 @@
           <User class="w-10 h-10" />
         </AvatarFallback>
       </Avatar>
-      <div>
+      <div class="flex-1">
         <h2 class="text-lg font-semibold">{{ profile.displayName }}</h2>
         <p class="text-sm text-muted-foreground">@{{ profile.handle }}</p>
       </div>
+      <slot />
     </CardContent>
   </Card>
 </template>
