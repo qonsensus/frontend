@@ -1,9 +1,7 @@
 <template>
   <Dialog v-model:open="open">
     <DialogTrigger asChild>
-      <Button size="icon">
-        <UserPlus />
-      </Button>
+      <Button> <UserPlus /> Add Friend </Button>
     </DialogTrigger>
     <DialogContent class="sm:max-w-100 min-w-4xl">
       <DialogHeader>
