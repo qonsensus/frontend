@@ -1,11 +1,11 @@
 <template>
   <ScrollArea class="h-full w-full">
-    <ProfileCard v-for="fr in incomingFriendRequests" :profile="fr.requesterProfile" class="w-full">
+    <ProfileCard v-for="fr in model" :profile="fr.requesterProfile" class="w-full">
       <div class="flex gap-2 mr-4">
-        <Button size="icon" @click="acceptFriendRequest(fr.id)">
+        <Button size="icon" @click="acceptFriendRequestHandler(fr.id)">
           <Check />
         </Button>
-        <Button size="icon" variant="outline" @click="declineFriendRequest(fr.id)">
+        <Button size="icon" variant="outline" @click="declineFriendRequestHandler(fr.id)">
           <Trash />
         </Button>
       </div>
@@ -21,11 +21,21 @@ import { Button } from '@/components/ui/button'
 import { Check, Trash } from 'lucide-vue-next'
 import { useFriendsService } from '@/composables/services/useFriendsService.ts'
 
-defineProps<{
-  incomingFriendRequests: components['schemas']['IncomingFrienshipRequestDto'][]
-}>()
+const model = defineModel<components['schemas']['IncomingFrienshipRequestDto'][]>({
+  required: true,
+})
 
-const { acceptFriendRequest, declineFriendRequest } = useFriendsService()
+const { acceptFriendRequest, declineFriendRequest, getIncomingFriendRequests } = useFriendsService()
+
+async function acceptFriendRequestHandler(requestId: string) {
+  await acceptFriendRequest(requestId)
+  model.value = await getIncomingFriendRequests()
+}
+
+async function declineFriendRequestHandler(requestId: string) {
+  await declineFriendRequest(requestId)
+  model.value = await getIncomingFriendRequests()
+}
 </script>
 
 <style scoped></style>

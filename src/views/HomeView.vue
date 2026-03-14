@@ -6,7 +6,7 @@
     />
     <div class="flex-1 min-h-0 gap-4 flex">
       <IncomingFriendRequestsList
-        :incoming-friend-requests="incomingFriendRequests || []"
+        v-model="incomingFriendRequests"
         v-show="selectedTab === 'incomingFriendRequests'"
       />
       <FriendsList :friends="friends || []" v-show="selectedTab === 'allFriends'" />
@@ -22,9 +22,9 @@ import HomeViewHeader from '@/components/HomeViewHeader.vue'
 import IncomingFriendRequestsList from '@/components/IncomingFriendRequestsList.vue'
 import FriendsList from '@/components/FriendsList.vue'
 
-const friends = ref<components['schemas']['FriendshipListItemDto'][]>()
-const incomingFriendRequests = ref<components['schemas']['IncomingFrienshipRequestDto'][]>()
-const outgoingFriendRequests = ref<components['schemas']['OutgoingFrienshipRequestDto'][]>()
+const friends = ref<components['schemas']['FriendshipListItemDto'][]>([])
+const incomingFriendRequests = ref<components['schemas']['IncomingFrienshipRequestDto'][]>([])
+const outgoingFriendRequests = ref<components['schemas']['OutgoingFrienshipRequestDto'][]>([])
 const selectedTab = ref<string>('onlineFriends')
 
 onMounted(async () => {
