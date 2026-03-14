@@ -51,6 +51,7 @@ import router from '@/router'
 import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useAuthService } from '@/composables/services/useAuthService.ts'
+import { useNotificationSocket } from '@/composables/services/useNotificationSocket.ts'
 
 const loading = ref(false)
 
@@ -75,6 +76,7 @@ const onSubmit = handleSubmit(async (values) => {
       useAuthToken().setToken(response.accessToken)
     }
     await useUserStore().fetchUser()
+    useNotificationSocket()
   } catch (e) {
     throw e
   } finally {
