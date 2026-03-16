@@ -15,27 +15,18 @@
 </template>
 
 <script setup lang="ts">
-import type { components } from '@/types/dtos.ts'
 import { onMounted, ref } from 'vue'
-import { useFriendsService } from '@/composables/services/useFriendsService.ts'
 import HomeViewHeader from '@/components/HomeViewHeader.vue'
 import IncomingFriendRequestsList from '@/components/IncomingFriendRequestsList.vue'
 import FriendsList from '@/components/FriendsList.vue'
+import { storeToRefs } from 'pinia'
+import { useFriendsStore } from '@/stores/friends.ts'
 
-const friends = ref<components['schemas']['FriendshipListItemDto'][]>([])
-const incomingFriendRequests = ref<components['schemas']['IncomingFrienshipRequestDto'][]>([])
-const outgoingFriendRequests = ref<components['schemas']['OutgoingFrienshipRequestDto'][]>([])
+const { friends, incomingFriendRequests } = storeToRefs(useFriendsStore())
+const { fetchAll } = useFriendsStore()
 const selectedTab = ref<string>('onlineFriends')
 
 onMounted(async () => {
-  const { getFriends, getIncomingFriendRequests, getOutgoingFriendRequests } = useFriendsService()
-  const [friendsRes, incomingFriendRequestsRes, outgoingFriendRequestsRes] = await Promise.all([
-    getFriends(),
-    getIncomingFriendRequests(),
-    getOutgoingFriendRequests(),
-  ])
-  friends.value = friendsRes
-  incomingFriendRequests.value = incomingFriendRequestsRes
-  outgoingFriendRequests.value = outgoingFriendRequestsRes
+  await fetchAll()
 })
 </script>

@@ -461,6 +461,12 @@ export interface components {
             handle: string;
             exists: boolean;
         };
+        IncomingFriendRequestWsDto: {
+            friendshipId: string;
+            senderAvatarUrl: string;
+            senderDisplayName: string;
+            listItem: components["schemas"]["IncomingFrienshipRequestDto"];
+        };
     };
     responses: never;
     parameters: never;
