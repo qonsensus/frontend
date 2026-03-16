@@ -9,6 +9,8 @@ export const useFriendsStore = defineStore('FriendsStore', () => {
   const outgoingFriendRequests = ref<components['schemas']['OutgoingFrienshipRequestDto'][]>([])
 
   function addIncomingFriendRequest(request: components['schemas']['IncomingFrienshipRequestDto']) {
+    const exists = incomingFriendRequests.value.some((req) => req.id === request.id)
+    if (exists) return
     incomingFriendRequests.value.push(request)
   }
 

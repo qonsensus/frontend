@@ -4,7 +4,7 @@
     <RouterView name="leftSecondarySidebar" />
     <RouterView class="w-full" />
   </div>
-  <Toaster />
+  <Toaster position="top-right" />
 </template>
 
 <script setup lang="ts">

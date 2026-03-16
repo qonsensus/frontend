@@ -12,8 +12,12 @@ export function useNotificationSocket() {
   })
 
   socket.on('friendRequest', (data: components['schemas']['IncomingFriendRequestWsDto']) => {
-    toast('New friend request!', {
+    toast.info('New friend request!', {
       description: `${data.senderDisplayName} has sent you a friend request.`,
+      dismissible: true,
+      cancel: {
+        label: 'Dismiss',
+      },
       action: {
         label: 'View',
         onClick: () => {
