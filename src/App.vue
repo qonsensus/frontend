@@ -1,7 +1,6 @@
 <template>
   <div class="w-screen h-screen flex">
     <RouterView name="leftSidebar" />
-    <RouterView name="leftSecondarySidebar" />
     <RouterView class="w-full" />
   </div>
   <Toaster position="top-right" />
