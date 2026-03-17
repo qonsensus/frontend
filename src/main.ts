@@ -5,6 +5,7 @@ import './assets/main.css'
 import App from './App.vue'
 import router from './router'
 import { useColorMode } from '@vueuse/core'
+import { useApplicationBootstrap } from '@/composables/utils/useApplicationBootstrap.ts'
 
 const app = createApp(App)
 
@@ -15,5 +16,8 @@ await router.isReady()
 
 const mode = useColorMode()
 mode.value = 'dark'
+
+// bootstrap app data
+await useApplicationBootstrap()
 
 app.mount('#app')

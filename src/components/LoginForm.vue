@@ -49,9 +49,8 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { ref } from 'vue'
 import router from '@/router'
 import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
-import { useUserStore } from '@/stores/user.ts'
 import { useAuthService } from '@/composables/services/useAuthService.ts'
-import { useNotificationSocket } from '@/composables/services/useNotificationSocket.ts'
+import { useApplicationBootstrap } from '@/composables/utils/useApplicationBootstrap.ts'
 
 const loading = ref(false)
 
@@ -75,8 +74,7 @@ const onSubmit = handleSubmit(async (values) => {
     if (response.accessToken) {
       useAuthToken().setToken(response.accessToken)
     }
-    await useUserStore().fetchUser()
-    useNotificationSocket()
+    await useApplicationBootstrap()
   } catch (e) {
     throw e
   } finally {

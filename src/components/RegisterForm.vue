@@ -59,8 +59,8 @@ import { Input } from '@/components/ui/input'
 import { toTypedSchema } from '@vee-validate/zod'
 import router from '@/router'
 import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
-import { useUserStore } from '@/stores/user.ts'
 import { useUserService } from '@/composables/services/useUserService.ts'
+import { useApplicationBootstrap } from '@/composables/utils/useApplicationBootstrap.ts'
 
 type RegisterUserDTO = components['schemas']['RegisterUserDto']
 
@@ -93,7 +93,7 @@ const { handleSubmit } = useForm<RegisterUserDTO>({
 const onSubmit = handleSubmit(async (values) => {
   const response = await useUserService().createUser(values)
   useAuthToken().setToken(response.tokenPair.accessToken)
-  await useUserStore().fetchUser()
+  await useApplicationBootstrap()
   await router.push('/profile/initial')
 })
 </script>

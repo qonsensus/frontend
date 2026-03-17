@@ -4,7 +4,7 @@
     direction="horizontal"
     auto-save-id="homeViewResizableGroup"
   >
-    <ResizablePanel :default-size="20" :max-size="25" :min-size="15">
+    <ResizablePanel :default-size="20" :max-size="40" :min-size="20">
       <LeftSecondaryHomeSidebar />
     </ResizablePanel>
     <ResizableHandle />
@@ -24,7 +24,6 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import HomeViewHeader from '@/components/HomeViewHeader.vue'
 import IncomingFriendRequestsList from '@/components/IncomingFriendRequestsList.vue'
 import FriendsList from '@/components/FriendsList.vue'
@@ -36,9 +35,4 @@ import LeftSecondaryHomeSidebar from '@/components/LeftSecondaryHomeSidebar.vue'
 
 const route = useRoute()
 const { friends, incomingFriendRequests } = storeToRefs(useFriendsStore())
-const { fetchAll } = useFriendsStore()
-
-onMounted(async () => {
-  await fetchAll()
-})
 </script>
