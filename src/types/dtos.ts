@@ -268,6 +268,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/conversation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConversationController_getConversation"];
+        put?: never;
+        post: operations["ConversationController_createConversation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/conversation/{conversationId}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConversationController_getConversationMessages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/conversation/{conversationId}/message": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConversationController_sendMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -331,6 +379,7 @@ export interface components {
             id: string;
             /** Format: date-time */
             createdAt: string;
+            content: string;
             conversation: components["schemas"]["Conversation"];
             author: components["schemas"]["User"];
         };
@@ -460,6 +509,13 @@ export interface components {
         HandleExistsResponseDto: {
             handle: string;
             exists: boolean;
+        };
+        CreateConversationDto: {
+            name: string;
+            participantIds: string[];
+        };
+        SendMessageDto: {
+            message: string;
         };
         IncomingFriendRequestWsDto: {
             friendshipId: string;
@@ -850,6 +906,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HandleExistsResponseDto"];
+                };
+            };
+        };
+    };
+    ConversationController_getConversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conversation"][];
+                };
+            };
+        };
+    };
+    ConversationController_createConversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateConversationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Conversation"];
+                };
+            };
+        };
+    };
+    ConversationController_getConversationMessages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationMessage"][];
+                };
+            };
+        };
+    };
+    ConversationController_sendMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendMessageDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationMessage"];
                 };
             };
         };
