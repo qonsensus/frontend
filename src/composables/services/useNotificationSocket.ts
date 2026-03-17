@@ -4,6 +4,7 @@ import type { components } from '@/types/dtos.ts'
 import { toast } from 'vue-sonner'
 import { useFriendsStore } from '@/stores/friends.ts'
 import router from '@/router'
+import { useConversationsStore } from '@/stores/conversations.ts'
 
 export function useNotificationSocket() {
   const socket = io('http://localhost:3000', {
@@ -27,5 +28,9 @@ export function useNotificationSocket() {
       },
     })
     useFriendsStore().addIncomingFriendRequest(data.listItem)
+  })
+
+  socket.on('newConversation', (data: components['schemas']['Conversation']) => {
+    useConversationsStore().addConversation(data)
   })
 }
