@@ -3,10 +3,10 @@
     <ToggleGroup
       type="single"
       variant="outline"
-      :model-value="model"
+      :model-value="route.params.tab"
       @update:model-value="
         (val) => {
-          if (val) model = val.toString()
+          if (val) $router.push({ path: `/${val}` })
         }
       "
     >
@@ -47,9 +47,12 @@ import {
 } from '@/components/ui/input-group'
 import { Search, UserCheck, Users, Inbox } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
+import { useFriendsStore } from '@/stores/friends.ts'
+import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 
-const model = defineModel<string>('selectedTab', { required: true })
-const props = defineProps<{
-  incomingFriendRequestCount: number
-}>()
+const { incomingFriendRequests } = storeToRefs(useFriendsStore())
+const incomingFriendRequestCount = computed(() => incomingFriendRequests.value?.length || 0)
+const route = useRoute()
 </script>

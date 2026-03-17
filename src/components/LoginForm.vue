@@ -82,6 +82,6 @@ const onSubmit = handleSubmit(async (values) => {
   } finally {
     loading.value = false
   }
-  await router.push('/')
+  await router.push('/onlineFriends')
 })
 </script>

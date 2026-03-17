@@ -126,7 +126,7 @@ watch(
 const onSubmit = handleSubmit(async (values) => {
   const { updateMyProfile } = useProfileService()
   await updateMyProfile(values)
-  await router.push('/')
+  await router.push('/onlineFriends')
 })
 </script>
 

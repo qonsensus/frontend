@@ -13,7 +13,7 @@ const router = createRouter({
       },
     },
     {
-      path: '/',
+      path: '/:tab(onlineFriends|allFriends|incomingFriendRequests)?',
       name: 'Home',
       components: {
         default: () => import('@/views/HomeView.vue'),
