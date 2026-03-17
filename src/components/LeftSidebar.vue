@@ -15,7 +15,7 @@
           class="border flex items-center justify-center w-11 h-11 hover:bg-accent transition-colors cursor-pointer"
         >
           <AvatarImage :src="user?.avatarUrl || 'none'" />
-          <AvatarFallback class="flex items-center justify-center text-primary">
+          <AvatarFallback>
             <User />
           </AvatarFallback>
         </Avatar>
@@ -52,7 +52,7 @@ import {
   House,
 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { ref } from 'vue'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { useUserStore } from '@/stores/user.ts'

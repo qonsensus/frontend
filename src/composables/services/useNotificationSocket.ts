@@ -3,6 +3,7 @@ import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
 import type { components } from '@/types/dtos.ts'
 import { toast } from 'vue-sonner'
 import { useFriendsStore } from '@/stores/friends.ts'
+import router from '@/router'
 
 export function useNotificationSocket() {
   const socket = io('http://localhost:3000', {
@@ -20,9 +21,8 @@ export function useNotificationSocket() {
       },
       action: {
         label: 'View',
-        onClick: () => {
-          // Implement navigation to the friend requests page or relevant UI
-          console.log('Navigate to friend requests page')
+        onClick: async () => {
+          await router.push('/incomingFriendRequests')
         },
       },
     })

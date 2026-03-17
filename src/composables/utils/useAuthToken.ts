@@ -12,7 +12,6 @@ export function useAuthToken() {
   }
 
   function isAuthenticated() {
-    console.log(getToken())
     return !!getToken()
   }
 
