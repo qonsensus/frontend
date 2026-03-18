@@ -20,11 +20,9 @@
             </Avatar>
             <div class="flex flex-col gap-1">
               <p class="text-sm font-medium leading-none">
-                {{ conversation.name || conversation.id }}
+                {{ conversation.participants.map((c) => c.displayName).join(', ') }}
               </p>
-              <p class="text-xs text-muted-foreground">
-                {{ new Date(conversation.createdAt).toLocaleTimeString() || 'No messages yet' }}
-              </p>
+              <p class="text-xs text-muted-foreground">message preview...</p>
             </div>
           </div>
         </CardContent>

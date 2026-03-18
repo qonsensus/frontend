@@ -6,7 +6,7 @@ export function useConversationService() {
     const client = useApi(true)
     const { data } = await client('/conversation')
       .get()
-      .json<components['schemas']['Conversation'][]>()
+      .json<components['schemas']['ConversationDto'][]>()
     if (!data.value) throw new Error('No conversations data')
     return data.value
   }
@@ -15,7 +15,7 @@ export function useConversationService() {
     const client = useApi(true)
     const { data } = await client('/conversation')
       .post(payload)
-      .json<components['schemas']['Conversation']>()
+      .json<components['schemas']['ConversationDto']>()
     if (!data.value) throw new Error('No conversation data')
     return data.value
   }

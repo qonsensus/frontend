@@ -389,7 +389,6 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
-            name: string;
             participants: components["schemas"]["UserToConversation"][];
             messages: components["schemas"]["ConversationMessage"][];
         };
@@ -509,6 +508,10 @@ export interface components {
         HandleExistsResponseDto: {
             handle: string;
             exists: boolean;
+        };
+        ConversationDto: {
+            id: string;
+            participants: components["schemas"]["Profile"][];
         };
         CreateConversationDto: {
             name: string;
@@ -924,7 +927,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Conversation"][];
+                    "application/json": components["schemas"]["ConversationDto"][];
                 };
             };
         };
@@ -947,7 +950,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Conversation"];
+                    "application/json": components["schemas"]["ConversationDto"];
                 };
             };
         };

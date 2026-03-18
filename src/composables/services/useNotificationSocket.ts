@@ -30,7 +30,7 @@ export function useNotificationSocket() {
     useFriendsStore().addIncomingFriendRequest(data.listItem)
   })
 
-  socket.on('newConversation', (data: components['schemas']['Conversation']) => {
+  socket.on('newConversation', (data: components['schemas']['ConversationDto']) => {
     useConversationsStore().addConversation(data)
   })
 }
