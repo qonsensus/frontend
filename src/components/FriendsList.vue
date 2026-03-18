@@ -1,12 +1,14 @@
 <template>
   <ScrollArea class="h-full w-full">
-    <ProfileCard v-for="fr in friends" :profile="fr.friendProfile" class="w-full">
-      <div class="flex gap-2 mr-4">
-        <Button size="icon" variant="outline" @click="createConversationHandler(fr.friendId)">
-          <MessageSquarePlus />
-        </Button>
-      </div>
-    </ProfileCard>
+    <div class="flex flex-col gap-4">
+      <ProfileCard v-for="fr in friends" :profile="fr.friendProfile" class="w-full">
+        <div class="flex gap-2 mr-4">
+          <Button size="icon" variant="outline" @click="createConversationHandler(fr.friendId)">
+            <MessageSquarePlus />
+          </Button>
+        </div>
+      </ProfileCard>
+    </div>
   </ScrollArea>
 </template>
 
