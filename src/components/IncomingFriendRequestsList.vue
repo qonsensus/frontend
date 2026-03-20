@@ -20,6 +20,7 @@ import ProfileCard from '@/components/ProfileCard.vue'
 import { Button } from '@/components/ui/button'
 import { Check, Trash } from 'lucide-vue-next'
 import { useFriendsService } from '@/composables/services/useFriendsService.ts'
+import { useFriendsStore } from '@/stores/friends.ts'
 
 const model = defineModel<components['schemas']['IncomingFrienshipRequestDto'][]>({
   required: true,
@@ -30,6 +31,7 @@ const { acceptFriendRequest, declineFriendRequest, getIncomingFriendRequests } =
 async function acceptFriendRequestHandler(requestId: string) {
   await acceptFriendRequest(requestId)
   model.value = await getIncomingFriendRequests()
+  await useFriendsStore().fetchFriends()
 }
 
 async function declineFriendRequestHandler(requestId: string) {

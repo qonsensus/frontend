@@ -5,6 +5,14 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/chat/:conversationId',
+      name: 'Chat',
+      components: {
+        default: () => import('@/views/textChat/PrivateChatView.vue'),
+        leftSidebar: () => import('@/components/LeftSidebar.vue'),
+      },
+    },
+    {
       path: '/settings/profile',
       name: 'ProfileSettings',
       components: {
