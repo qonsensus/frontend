@@ -10,19 +10,23 @@
       <Card
         v-for="conversation in conversations"
         :key="conversation.id"
-        class="p-2 rounded-md cursor-pointer"
+        :class="{
+          'p-2 rounded-md cursor-pointer transition duration-150 hover:bg-accent': true,
+          'bg-primary/10': conversation.id === selectedConversationId,
+        }"
+        @click="$router.push(`/chat/${conversation.id}`)"
       >
         <CardContent class="px-1">
           <div class="flex gap-2">
-            <Avatar class="h-10 w-10">
+            <Avatar class="h-12 w-12 border">
               <AvatarImage src="" alt="Avatar" />
               <AvatarFallback>AB</AvatarFallback>
             </Avatar>
             <div class="flex flex-col gap-1">
-              <p class="text-sm font-medium leading-none">
+              <p class="font-medium leading-none">
                 {{ conversation.participants.map((c) => c.displayName).join(', ') }}
               </p>
-              <p class="text-xs text-muted-foreground">message preview...</p>
+              <p class="text-sm text-muted-foreground">message preview...</p>
             </div>
           </div>
         </CardContent>
@@ -38,8 +42,15 @@ import { storeToRefs } from 'pinia'
 import { useConversationsStore } from '@/stores/conversations.ts'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { useRoute } from 'vue-router'
+import { computed } from 'vue'
 
 const { conversations } = storeToRefs(useConversationsStore())
+const params = useRoute().params
+
+const selectedConversationId = computed<string | undefined>(() => {
+  return conversations.value.find((c) => c.id === params.conversationId)?.id
+})
 </script>
 
 <style scoped></style>
