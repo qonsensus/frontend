@@ -31,7 +31,7 @@
         <InputGroupAddon align="block-end" class="p-0">
           <div class="w-full flex items-center border-t p-3 gap-3">
             <ButtonGroup class="ml-auto">
-              <Button size="icon-sm" variant="secondary">
+              <Button size="icon-sm" variant="secondary" disabled>
                 <Paperclip />
               </Button>
               <Popover>
@@ -41,7 +41,12 @@
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent class="p-0 border-none bg-transparent" align="end">
-                  <EmojiPicker theme="dark" native @select="(e) => insertTextAtCursor(e.i)" />
+                  <EmojiPicker
+                    disable-skin-tones
+                    theme="dark"
+                    native
+                    @select="(e) => insertTextAtCursor(e.i)"
+                  />
                 </PopoverContent>
               </Popover>
             </ButtonGroup>
@@ -97,12 +102,13 @@ function insertTextAtCursor(text: string) {
   const end = textarea.selectionEnd
   const before = chatMessage.value.substring(0, start)
   const after = chatMessage.value.substring(end)
-  chatMessage.value = before + text + after
+  chatMessage.value = `${before} ${text} ${after}`
 
   nextTick(() => {
     const newPosition = start + text.length
     textarea.setSelectionRange(newPosition, newPosition)
     textarea.focus()
+    console.log(chatMessage.value)
   })
 }
 </script>
