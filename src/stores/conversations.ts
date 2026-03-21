@@ -6,6 +6,10 @@ import { useConversationService } from '@/composables/services/useConversationSe
 export const useConversationsStore = defineStore('ConversationsStore', () => {
   const conversations = ref<components['schemas']['ConversationDto'][]>([])
 
+  // Currently open conversation
+  const currentlyOpenConversation = ref<components['schemas']['ConversationDto'] | null>(null)
+  const currentlyOpenConversationMessages = ref<components['schemas']['ConversationMessage'][]>([])
+
   function addConversation(conversation: components['schemas']['ConversationDto']) {
     conversations.value.push(conversation)
   }
@@ -17,6 +21,8 @@ export const useConversationsStore = defineStore('ConversationsStore', () => {
 
   return {
     conversations,
+    currentlyOpenConversation,
+    currentlyOpenConversationMessages,
     addConversation,
     fetchConversations,
   }

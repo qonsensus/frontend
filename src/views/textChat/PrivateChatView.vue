@@ -9,7 +9,7 @@
     </ResizablePanel>
     <ResizableHandle />
     <ResizablePanel>
-      <PrivateChatPanel @sendMessage="sendMessageHandler" :conversationTitle :messages="messages" />
+      <PrivateChatPanel @sendMessage="sendMessageHandler" />
     </ResizablePanel>
   </ResizablePanelGroup>
 </template>
@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { useConversationService } from '@/composables/services/useConversationService.ts'
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, watch } from 'vue'
 import type { components } from '@/types/dtos.ts'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import LeftSecondaryHomeSidebar from '@/components/LeftSecondaryHomeSidebar.vue'
@@ -27,27 +27,27 @@ import { useConversationsStore } from '@/stores/conversations.ts'
 
 const route = useRoute()
 const { fetchConversationMessages, sendMessage } = useConversationService()
-const messages = ref<components['schemas']['ConversationMessage'][]>([])
-const { conversations } = storeToRefs(useConversationsStore())
-const selectedConversation = computed<components['schemas']['ConversationDto'] | undefined>(() => {
-  return conversations.value.find((c) => c.id === route.params.conversationId)
-})
-const conversationTitle = computed(() => {
-  if (!selectedConversation.value) return 'Private Chat'
-  return selectedConversation.value.participants.map((p) => p.displayName).join(', ')
-})
+const { conversations, currentlyOpenConversation, currentlyOpenConversationMessages } =
+  storeToRefs(useConversationsStore())
 
 watch(
   () => route.params.conversationId,
   async (newVal, oldVal) => {
     if (newVal && oldVal !== newVal) {
-      messages.value = await fetchConversationMessages(newVal as string)
+      currentlyOpenConversation.value = conversations.value.find((c) => c.id === newVal) || null
+      currentlyOpenConversationMessages.value = await fetchConversationMessages(newVal as string)
     }
   },
 )
 
 onMounted(async () => {
-  messages.value = await fetchConversationMessages(route.params.conversationId as string)
+  if (route.params.conversationId) {
+    currentlyOpenConversation.value =
+      conversations.value.find((c) => c.id === route.params.conversationId) || null
+    currentlyOpenConversationMessages.value = await fetchConversationMessages(
+      route.params.conversationId as string,
+    )
+  }
 })
 
 async function sendMessageHandler(content: string) {
@@ -55,7 +55,7 @@ async function sendMessageHandler(content: string) {
     message: content,
   }
   const message = await sendMessage(route.params.conversationId as string, dto)
-  messages.value.push(message)
+  currentlyOpenConversationMessages.value.push(message)
 }
 </script>
 
