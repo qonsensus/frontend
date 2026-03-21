@@ -18,10 +18,18 @@
         </Button>
       </ButtonGroup>
     </div>
-    <div class="min-h-0 flex-1"></div>
+    <div class="min-h-0 flex-1 p-4">
+      <div v-for="message in messages" :key="message.id">
+        <p>
+          <strong> {{ message.author?.profile?.displayName || 'TEST' }} </strong>:
+          {{ message.content }}
+        </p>
+      </div>
+    </div>
     <div class="p-5">
       <InputGroup>
         <textarea
+          @keydown.enter.prevent="sendMessage"
           ref="textareaRef"
           data-slot="input-group-control"
           class="flex field-sizing-content min-h-20 w-full resize-none rounded-md bg-transparent px-3 py-2.5 text-base transition-[color,box-shadow] outline-none md:text-sm"
@@ -73,26 +81,23 @@ import {
   Paperclip,
   SmileIcon,
 } from 'lucide-vue-next'
-import { useConversationsStore } from '@/stores/conversations.ts'
-import { storeToRefs } from 'pinia'
-import { useRoute } from 'vue-router'
-import { computed, nextTick, ref } from 'vue'
-import type { components } from '@/types/dtos.ts'
+import { nextTick, ref } from 'vue'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { InputGroup, InputGroupAddon } from '@/components/ui/input-group'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import type { components } from '@/types/dtos.ts'
 
-const params = useRoute().params
-const { conversations } = storeToRefs(useConversationsStore())
-const selectedConversation = computed<components['schemas']['ConversationDto'] | undefined>(() => {
-  return conversations.value.find((c) => c.id === params.conversationId)
-})
-const conversationTitle = computed(() => {
-  if (!selectedConversation.value) return 'Private Chat'
-  return selectedConversation.value.participants.map((p) => p.displayName).join(', ')
-})
 const chatMessage = ref<string>('')
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
+
+const props = defineProps<{
+  conversationTitle: string
+  messages: components['schemas']['ConversationMessage'][]
+}>()
+
+const emit = defineEmits<{
+  (event: 'sendMessage', message: string): void
+}>()
 
 function insertTextAtCursor(text: string) {
   const textarea = textareaRef.value
@@ -110,6 +115,12 @@ function insertTextAtCursor(text: string) {
     textarea.focus()
     console.log(chatMessage.value)
   })
+}
+
+function sendMessage() {
+  if (chatMessage.value.trim() === '') return
+  emit('sendMessage', chatMessage.value)
+  chatMessage.value = ''
 }
 </script>
 
