@@ -18,6 +18,10 @@ const mode = useColorMode()
 mode.value = 'dark'
 
 // bootstrap app data
-await useApplicationBootstrap()
+await useApplicationBootstrap().catch((err) => {
+  console.log('Error during application bootstrap:')
+  console.log(err)
+  throw err
+})
 
 app.mount('#app')
