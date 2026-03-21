@@ -18,7 +18,7 @@
         </Button>
       </ButtonGroup>
     </div>
-    <ScrollArea class="min-h-0 flex-1">
+    <ScrollArea class="min-h-0 flex-1" ref="scrollArea">
       <div class="px-4 flex flex-col h-full justify-end">
         <ChatMessage
           v-for="(message, index) in messages"
@@ -83,7 +83,7 @@ import {
   Paperclip,
   SmileIcon,
 } from 'lucide-vue-next'
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { InputGroup, InputGroupAddon } from '@/components/ui/input-group'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -91,21 +91,49 @@ import ChatMessage from './ChatMessage.vue'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { storeToRefs } from 'pinia'
 import { useConversationsStore } from '@/stores/conversations.ts'
-import { useUserStore } from '@/stores/user.ts'
 
 const chatMessage = ref<string>('')
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const { currentlyOpenConversationMessages: messages, currentlyOpenConversation } =
   storeToRefs(useConversationsStore())
-const { user } = storeToRefs(useUserStore())
 const conversationTitle = computed(() => {
   if (!currentlyOpenConversation.value) return 'Private Chat'
   return currentlyOpenConversation.value.participants.map((p) => p.displayName).join(', ')
 })
+const scrollAreaRef = useTemplateRef('scrollArea')
+
+function getScrollViewport(): HTMLElement | null {
+  const root = scrollAreaRef.value?.$el as HTMLElement | undefined
+  if (!root) return null
+  return root.querySelector('[data-slot="scroll-area-viewport"]') as HTMLElement | null
+}
+
+watch(
+  () => messages.value.length,
+  (newValue, oldValue) => {
+    nextTick(() => {
+      if (oldValue === 0 && newValue > 0) {
+        scrollChatToBottom(true)
+      } else {
+        scrollChatToBottom()
+      }
+    })
+  },
+)
 
 const emit = defineEmits<{
   (event: 'sendMessage', message: string): void
 }>()
+
+function scrollChatToBottom(instant = false) {
+  const viewport = getScrollViewport()
+  if (!viewport) return
+
+  viewport.scrollTo({
+    top: viewport.scrollHeight,
+    behavior: instant ? 'instant' : 'smooth',
+  })
+}
 
 function insertTextAtCursor(text: string) {
   const textarea = textareaRef.value
