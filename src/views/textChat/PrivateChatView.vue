@@ -54,8 +54,7 @@ async function sendMessageHandler(content: string) {
   const dto: components['schemas']['SendMessageDto'] = {
     message: content,
   }
-  const message = await sendMessage(route.params.conversationId as string, dto)
-  currentlyOpenConversationMessages.value.push(message)
+  await sendMessage(route.params.conversationId as string, dto)
 }
 </script>
 
