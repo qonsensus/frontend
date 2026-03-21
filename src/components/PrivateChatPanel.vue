@@ -18,14 +18,7 @@
         </Button>
       </ButtonGroup>
     </div>
-    <div class="min-h-0 flex-1">
-      <EmojiPicker
-        theme="dark"
-        class="bg-primary"
-        native
-        @select="(e) => insertTextAtCursor(e.i)"
-      />
-    </div>
+    <div class="min-h-0 flex-1"></div>
     <div class="p-5">
       <InputGroup>
         <textarea
@@ -41,9 +34,16 @@
               <Button size="icon-sm" variant="secondary">
                 <Paperclip />
               </Button>
-              <Button size="icon-sm" variant="secondary">
-                <SmileIcon />
-              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button size="icon-sm" variant="secondary">
+                    <SmileIcon />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent class="p-0 border-none bg-transparent" align="end">
+                  <EmojiPicker theme="dark" native @select="(e) => insertTextAtCursor(e.i)" />
+                </PopoverContent>
+              </Popover>
             </ButtonGroup>
             <Button size="icon" variant="default">
               <SendHorizonal />
@@ -75,6 +75,7 @@ import { computed, nextTick, ref } from 'vue'
 import type { components } from '@/types/dtos.ts'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { InputGroup, InputGroupAddon } from '@/components/ui/input-group'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 const params = useRoute().params
 const { conversations } = storeToRefs(useConversationsStore())
