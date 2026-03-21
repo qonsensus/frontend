@@ -35,7 +35,6 @@ export function useNotificationSocket() {
   })
 
   socket.on('newMessage', (data: components['schemas']['ConversationMessageDto']) => {
-    console.log('received new message via socket:', data)
     // If the message belongs to the currently open conversation, add it to the messages list
     const conversationsStore = useConversationsStore()
     if (conversationsStore.currentlyOpenConversation?.id === data.conversationId) {

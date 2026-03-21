@@ -116,8 +116,7 @@ const onSubmit = handleSubmit(async (values) => {
     useUserStore().setUser(updatedUser)
     router.back()
   } catch (error) {
-    console.error('Failed to update profile', error)
-    alert('Failed to update profile')
+    throw error
   }
 })
 </script>

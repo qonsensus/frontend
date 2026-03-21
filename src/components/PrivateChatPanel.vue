@@ -149,7 +149,6 @@ function insertTextAtCursor(text: string) {
     const newPosition = start + text.length
     textarea.setSelectionRange(newPosition, newPosition)
     textarea.focus()
-    console.log(chatMessage.value)
   })
 }
 
