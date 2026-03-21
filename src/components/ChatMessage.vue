@@ -3,7 +3,7 @@
     <div class="flex items-center gap-2 mt-4 mb-2" v-if="!isSameAuthorAsPrev">
       <div v-if="isMyMessage" class="flex-1 border-t" />
       <Badge class="font-bold text-sm flex items-baseline" variant="outline">
-        <p>{{ message.author.profile.displayName }}</p>
+        <p>{{ message.authorName }}</p>
       </Badge>
       <div v-if="!isMyMessage" class="flex-1 border-t" />
     </div>
@@ -33,17 +33,17 @@ import { Badge } from '@/components/ui/badge'
 const { user } = storeToRefs(useUserStore())
 
 const props = defineProps<{
-  message: components['schemas']['ConversationMessage']
-  prevMessage?: components['schemas']['ConversationMessage']
+  message: components['schemas']['ConversationMessageDto']
+  prevMessage?: components['schemas']['ConversationMessageDto']
 }>()
 
 const isMyMessage = computed(() => {
-  return props.message.author.profile.id === user.value?.id
+  return props.message.authorProfileId === user.value?.id
 })
 
 const isSameAuthorAsPrev = computed(() => {
   if (!props.prevMessage) return false
-  return props.message.author.profile.id === props.prevMessage.author.profile.id
+  return props.message.authorProfileId === props.prevMessage.authorProfileId
 })
 
 function formatTime(date: string) {

@@ -8,7 +8,9 @@ export const useConversationsStore = defineStore('ConversationsStore', () => {
 
   // Currently open conversation
   const currentlyOpenConversation = ref<components['schemas']['ConversationDto'] | null>(null)
-  const currentlyOpenConversationMessages = ref<components['schemas']['ConversationMessage'][]>([])
+  const currentlyOpenConversationMessages = ref<components['schemas']['ConversationMessageDto'][]>(
+    [],
+  )
 
   function addConversation(conversation: components['schemas']['ConversationDto']) {
     conversations.value.push(conversation)

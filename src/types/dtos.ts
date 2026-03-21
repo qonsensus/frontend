@@ -380,6 +380,7 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             content: string;
+            conversationId: string;
             conversation: components["schemas"]["Conversation"];
             author: components["schemas"]["User"];
         };
@@ -389,6 +390,7 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+            participantsHash?: string;
             participants: components["schemas"]["UserToConversation"][];
             messages: components["schemas"]["ConversationMessage"][];
         };
@@ -512,6 +514,17 @@ export interface components {
         ConversationDto: {
             id: string;
             participants: components["schemas"]["Profile"][];
+        };
+        ConversationMessageDto: {
+            id: string;
+            content: string;
+            conversationId: string;
+            authorId: string;
+            authorProfileId: string;
+            authorName: string;
+            /** Format: date-time */
+            createdAt: string;
+            authorAvatarUrl?: string;
         };
         CreateConversationDto: {
             name: string;
@@ -971,7 +984,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConversationMessage"][];
+                    "application/json": components["schemas"]["ConversationMessageDto"][];
                 };
             };
         };
@@ -996,7 +1009,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConversationMessage"];
+                    "application/json": components["schemas"]["ConversationMessageDto"];
                 };
             };
         };

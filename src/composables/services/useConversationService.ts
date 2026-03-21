@@ -23,20 +23,22 @@ export function useConversationService() {
   async function sendMessage(
     conversationId: string,
     payload: components['schemas']['SendMessageDto'],
-  ) {
+  ): Promise<components['schemas']['ConversationMessageDto']> {
     const client = useApi(true)
     const { data } = await client(`/conversation/${conversationId}/message`)
       .post(payload)
-      .json<components['schemas']['ConversationMessage']>()
+      .json<components['schemas']['ConversationMessageDto']>()
     if (!data.value) throw new Error('No message data')
     return data.value
   }
 
-  async function fetchConversationMessages(conversationId: string) {
+  async function fetchConversationMessages(
+    conversationId: string,
+  ): Promise<components['schemas']['ConversationMessageDto'][]> {
     const client = useApi(true)
     const { data } = await client(`/conversation/${conversationId}/messages`)
       .get()
-      .json<components['schemas']['ConversationMessage'][]>()
+      .json<components['schemas']['ConversationMessageDto'][]>()
     if (!data.value) throw new Error('No messages data')
     return data.value
   }
