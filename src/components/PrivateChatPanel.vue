@@ -18,14 +18,14 @@
         </Button>
       </ButtonGroup>
     </div>
-    <div class="min-h-0 flex-1 p-4">
-      <div v-for="message in messages" :key="message.id">
-        <p>
-          <strong> {{ message.author?.profile?.displayName || 'TEST' }} </strong>:
-          {{ message.content }}
-        </p>
-      </div>
-    </div>
+    <ScrollArea class="min-h-0 flex-1 px-4 overflow-y-auto flex flex-col gap-4">
+      <ChatMessage
+        v-for="(message, index) in messages"
+        :key="message.id"
+        :message="message"
+        :prevMessage="messages[index - 1]"
+      />
+    </ScrollArea>
     <div class="p-5">
       <InputGroup>
         <textarea
@@ -86,6 +86,8 @@ import { ButtonGroup } from '@/components/ui/button-group'
 import { InputGroup, InputGroupAddon } from '@/components/ui/input-group'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { components } from '@/types/dtos.ts'
+import ChatMessage from './ChatMessage.vue'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 const chatMessage = ref<string>('')
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
