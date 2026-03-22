@@ -1,9 +1,10 @@
 import { createFetch } from '@vueuse/core'
 import router from '@/router'
 import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
+import { config } from '@/config.ts'
 
 export function useApi(authenticatedClient: boolean = false) {
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+  const apiUrl = config.apiUrl || 'http://localhost:3000'
   const sharedHeaders = {
     'Content-Type': 'application/json',
   }
