@@ -6,22 +6,24 @@ import App from './App.vue'
 import router from './router'
 import { useColorMode } from '@vueuse/core'
 import { useApplicationBootstrap } from '@/composables/utils/useApplicationBootstrap.ts'
+// import { useApplicationBootstrap } from '@/composables/utils/useApplicationBootstrap.ts'
 
 const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
+;(async () => {
+  await router.isReady()
 
-await router.isReady()
+  const mode = useColorMode()
+  mode.value = 'dark'
 
-const mode = useColorMode()
-mode.value = 'dark'
+  // bootstrap app data
+  await useApplicationBootstrap().catch((err) => {
+    console.log('Error during application bootstrap:')
+    console.log(err)
+    throw err
+  })
 
-// bootstrap app data
-await useApplicationBootstrap().catch((err) => {
-  console.log('Error during application bootstrap:')
-  console.log(err)
-  throw err
-})
-
-app.mount('#app')
+  app.mount('#app')
+})()
