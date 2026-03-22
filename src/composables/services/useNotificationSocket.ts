@@ -5,9 +5,10 @@ import { toast } from 'vue-sonner'
 import { useFriendsStore } from '@/stores/friends.ts'
 import router from '@/router'
 import { useConversationsStore } from '@/stores/conversations.ts'
+import { config } from '@/config.ts'
 
 export function useNotificationSocket() {
-  const socket = io('http://localhost:3000', {
+  const socket = io(config.apiUrl, {
     auth: {
       token: useAuthToken().getToken(),
     },
