@@ -7,7 +7,11 @@
       <p class="font-medium text-lg">{{ conversationTitle }}</p>
       <div class="flex-1" />
       <ButtonGroup>
-        <Button size="icon" variant="outline">
+        <Button
+          size="icon"
+          variant="outline"
+          @click="$router.push(`/private-call/${currentlyOpenConversation?.id}`)"
+        >
           <Phone />
         </Button>
         <Button size="icon" variant="outline">

@@ -5,11 +5,21 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/private-call/:conversationId',
+      name: 'Call',
+      components: {
+        default: () => import('@/views/call/PrivateCallView.vue'),
+        leftSidebar: () => import('@/components/LeftSidebar.vue'),
+        leftSecondarySidebar: () => import('@/components/LeftSecondaryHomeSidebar.vue'),
+      },
+    },
+    {
       path: '/chat/:conversationId',
       name: 'Chat',
       components: {
         default: () => import('@/views/textChat/PrivateChatView.vue'),
         leftSidebar: () => import('@/components/LeftSidebar.vue'),
+        leftSecondarySidebar: () => import('@/components/LeftSecondaryHomeSidebar.vue'),
       },
     },
     {
@@ -26,6 +36,7 @@ const router = createRouter({
       components: {
         default: () => import('@/views/HomeView.vue'),
         leftSidebar: () => import('@/components/LeftSidebar.vue'),
+        leftSecondarySidebar: () => import('@/components/LeftSecondaryHomeSidebar.vue'),
       },
     },
     {
