@@ -39,14 +39,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
-import { mediasoupKey, type RemotePeer } from '@/composables/services/useMediasoupSocket.ts'
+import { computed, inject, nextTick, ref, watch } from 'vue'
+import { mediasoupKey, type Peer } from '@/composables/services/useMediasoupSocket.ts'
 import { useAudioLevel } from '@/composables/useAudioLevel.ts'
 import { Button } from '@/components/ui/button'
 import { Expand, Minimize } from 'lucide-vue-next'
 
 const props = defineProps<{
-  peer: RemotePeer
+  peer: Peer
   label?: string
   expandable?: boolean
   expanded?: boolean

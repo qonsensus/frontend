@@ -16,13 +16,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, watch } from 'vue'
-import { mediasoupKey, type RemotePeer } from '@/composables/services/useMediasoupSocket.ts'
+import { computed, inject } from 'vue'
+import { mediasoupKey, type Peer } from '@/composables/services/useMediasoupSocket.ts'
 import CallParticipantCard from '@/components/CallParticipantCard.vue'
 
 const mediasoup = inject(mediasoupKey)!
 
-const localPeer = computed<RemotePeer | null>(() => {
+const localPeer = computed<Peer | null>(() => {
   const socketId = mediasoup.localSocketId.value
   const audioStream = mediasoup.localAudioStream.value
   const videoStream = mediasoup.localVideoStream.value || undefined
@@ -34,7 +34,7 @@ const localPeer = computed<RemotePeer | null>(() => {
     videoStream.getVideoTracks().forEach((t) => stream.addTrack(t))
   }
 
-  const result: RemotePeer = {
+  const result: Peer = {
     socketId: `${socketId} (you)`,
     audioStream,
     videoStream,
@@ -46,7 +46,7 @@ const localPeer = computed<RemotePeer | null>(() => {
   return result
 })
 
-const peers = computed<RemotePeer[]>(() => {
+const peers = computed<Peer[]>(() => {
   const remote = Array.from(mediasoup.remotePeers.value.values()).map((p) => ({ ...p }))
   return localPeer.value ? [localPeer.value, ...remote] : remote
 })

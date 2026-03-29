@@ -8,16 +8,19 @@ import {
   type Transport,
 } from 'mediasoup-client/types'
 import { Device } from 'mediasoup-client'
-import { ref, readonly, onUnmounted, type Ref, type InjectionKey } from 'vue'
+import { onUnmounted, type Ref, type InjectionKey, watch } from 'vue'
 import { useDenoisedAudio } from '@/composables/useDenoisedAudio.ts'
+import { useCallStore } from '@/stores/call.ts'
+import { storeToRefs } from 'pinia'
 
 interface JoinRoomAck {
   rtpCapabilities: RtpCapabilities
   existingProducers: { producerId: string; socketId: string; kind: string }[]
 }
 
-export interface RemotePeer {
+export interface Peer {
   socketId: string
+  isLocal: boolean
   audioProducerId?: string
   videoProducerId?: string
   screenProducerId?: string
@@ -33,15 +36,24 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
   const resolvedRoomId = typeof roomId === 'string' ? roomId : roomId.value
 
   // Reactive state
-  const isMuted = ref(false)
-  const isVideoEnabled = ref(false)
-  const isScreenSharing = ref(false)
-  const isConnected = ref(false)
-  const remotePeers = ref<Map<string, RemotePeer>>(new Map())
-  const localAudioStream = ref<MediaStream | null>(null)
-  const localVideoStream = ref<MediaStream | null>(null)
-  const localScreenStream = ref<MediaStream | null>(null)
-  const localSocketId = ref<string | null>(null)
+  const { peers, isVoiceOn, isVideoOn, isScreenShareOn } = storeToRefs(useCallStore())
+  const {
+    removePeer,
+    addPeer,
+    setCallState,
+    getPeer,
+    unmuteVoice,
+    muteVoice,
+    enableVideo,
+    disableVideo,
+    enableScreenShare,
+    disableScreenShare,
+    setLocalVideoStream,
+    setLocalScreenStream,
+    removeLocalScreenStream,
+    removeLocalVideoStream,
+    resetState,
+  } = useCallStore()
 
   // Internal state (non-reactive)
   let socket: Socket | null = null
@@ -64,7 +76,6 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     device = new Device()
 
     const joinAck: JoinRoomAck = await socket.emitWithAck('joinRoom', { roomId: resolvedRoomId })
-    localSocketId.value = socket.id ?? null
     await device.load({ routerRtpCapabilities: joinAck.rtpCapabilities })
 
     const sendOpts = await socket.emitWithAck('createTransport', { roomId: resolvedRoomId })
@@ -109,7 +120,6 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     const { stream: denoisedStream, setVadThreshold } = await useDenoisedAudio()
     setVadThreshold(0.6)
     const track = denoisedStream.getAudioTracks()[0]
-    localAudioStream.value = denoisedStream
     audioProducer = await sendTransport.produce({ track })
 
     // Listen for new producers from other peers
@@ -122,7 +132,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
 
     // Listen for peer disconnection
     socket.on('peerLeft', ({ socketId }: { socketId: string }) => {
-      const peer = remotePeers.value.get(socketId)
+      const peer = peers.value.get(socketId)
       if (!peer) return
 
       // Close consumers associated with this peer
@@ -148,16 +158,24 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
         }
       }
 
-      remotePeers.value.delete(socketId)
-      remotePeers.value = new Map(remotePeers.value)
+      removePeer(peer)
     })
 
     // Consume existing producers
-    for (const { producerId, socketId, kind } of joinAck.existingProducers) {
+    for (const { producerId, socketId } of joinAck.existingProducers) {
       await consume(producerId, socketId)
     }
-
-    isConnected.value = true
+    addPeer({
+      socketId: socket.id!,
+      isLocal: true,
+      audioProducerId: undefined,
+      videoProducerId: undefined,
+      screenProducerId: undefined,
+      audioStream: denoisedStream,
+      videoStream: undefined,
+      screenStream: undefined,
+    })
+    setCallState('in-call')
   }
 
   async function consume(producerId: string, socketId: string) {
@@ -185,10 +203,13 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     })
 
     // Get or create remote peer entry
-    let peer = remotePeers.value.get(socketId)
+    let peer = getPeer(socketId)
     if (!peer) {
-      peer = { socketId }
-      remotePeers.value.set(socketId, peer)
+      addPeer({
+        socketId,
+        isLocal: false,
+      })
+      peer = getPeer(socketId)!
     }
 
     if (consumer.kind === 'audio') {
@@ -210,47 +231,51 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
         console.warn('Consumer:', consumer)
       }
     }
-
-    // Trigger reactivity
-    remotePeers.value = new Map(remotePeers.value)
   }
 
-  async function toggleMute() {
-    if (!audioProducer) return
+  // region Voice
 
-    if (isMuted.value) {
-      audioProducer.resume()
-      isMuted.value = false
+  watch(isVoiceOn, (newVal) => {
+    if (newVal) {
+      void mute()
     } else {
-      audioProducer.pause()
-      isMuted.value = true
+      void unmute()
     }
-  }
+  })
 
   async function mute() {
-    if (!audioProducer || isMuted.value) return
+    if (!audioProducer || !isVoiceOn.value) return
     audioProducer.pause()
-    isMuted.value = true
+    muteVoice()
   }
 
   async function unmute() {
-    if (!audioProducer || !isMuted.value) return
+    if (!audioProducer || isVoiceOn.value) return
     audioProducer.resume()
-    isMuted.value = false
+    unmuteVoice()
   }
 
-  async function startVideo() {
-    if (!sendTransport || isVideoEnabled.value) return
+  // endregion
 
+  // region Video
+
+  watch(isVideoOn, (newVal) => {
+    if (newVal) {
+      void stopVideo()
+    } else {
+      void startVideo()
+    }
+  })
+
+  async function startVideo() {
+    if (!sendTransport || isVideoOn.value) return
     const videoStream = await navigator.mediaDevices.getUserMedia({
       video: { aspectRatio: { ideal: 16 / 9 } },
     })
-    localVideoStream.value = videoStream
-
+    setLocalVideoStream(videoStream)
     const vp9Codec = device!.recvRtpCapabilities.codecs?.find(
       (c) => c.mimeType.toLowerCase() === 'video/vp9',
     )
-
     videoProducer = await sendTransport.produce({
       track: videoStream.getVideoTracks()[0],
       ...(vp9Codec ? { codec: vp9Codec } : {}),
@@ -258,35 +283,31 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
         source: 'camera',
       },
     })
-    isVideoEnabled.value = true
+    enableVideo()
   }
 
   async function stopVideo() {
-    if (!videoProducer || !isVideoEnabled.value) return
-
+    if (!videoProducer || !isVideoOn) return
     videoProducer.close()
     videoProducer = null
-
-    // Stop the local video track
-    if (localVideoStream.value) {
-      localVideoStream.value.getTracks().forEach((track) => track.stop())
-      localVideoStream.value = null
-    }
-
-    isVideoEnabled.value = false
+    removeLocalVideoStream()
+    disableVideo()
   }
 
-  async function toggleVideo() {
-    if (isVideoEnabled.value) {
-      await stopVideo()
+  // endregion
+
+  // region Screen Share
+
+  watch(isScreenShareOn, (newVal) => {
+    if (newVal) {
+      void stopScreenShare()
     } else {
-      await startVideo()
+      void startScreenShare()
     }
-  }
+  })
 
   async function startScreenShare() {
-    if (!sendTransport || isScreenSharing.value) return
-
+    if (!sendTransport || isScreenShareOn.value) return
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
       video: {
         width: { ideal: 1920, max: 1920 },
@@ -299,14 +320,11 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
       screenStream.getTracks().forEach((t) => t.stop())
       return
     }
-
-    localScreenStream.value = screenStream
-
+    setLocalScreenStream(screenStream)
     const vp9Codec = device!.recvRtpCapabilities.codecs?.find(
       (c) => c.mimeType.toLowerCase() === 'video/vp9',
     )
     if (!vp9Codec) throw new Error('VP9 codec not supported by the mediasoup router')
-
     screenShareProducer = await sendTransport.produce({
       track: screenTrack,
       codec: vp9Codec,
@@ -325,8 +343,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
         videoGoogleMinBitrate: 1000, // kbps — prevents the bitrate dropping too low
       },
     })
-    isScreenSharing.value = true
-
+    enableScreenShare()
     // Handle the user clicking the browser's native "Stop sharing" button
     screenTrack.addEventListener('ended', () => {
       stopScreenShare()
@@ -334,26 +351,14 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
   }
 
   async function stopScreenShare() {
-    if (!screenShareProducer || !isScreenSharing.value) return
-
+    if (!screenShareProducer || !isScreenShareOn.value) return
     screenShareProducer.close()
     screenShareProducer = null
-
-    if (localScreenStream.value) {
-      localScreenStream.value.getTracks().forEach((track) => track.stop())
-      localScreenStream.value = null
-    }
-
-    isScreenSharing.value = false
+    removeLocalScreenStream()
+    disableScreenShare()
   }
 
-  async function toggleScreenShare() {
-    if (isScreenSharing.value) {
-      await stopScreenShare()
-    } else {
-      await startScreenShare()
-    }
-  }
+  // endregion
 
   function disconnect() {
     // Close all consumers
@@ -371,12 +376,8 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     screenShareProducer = null
 
     // Stop local media tracks
-    localAudioStream.value?.getTracks().forEach((track) => track.stop())
-    localAudioStream.value = null
-    localVideoStream.value?.getTracks().forEach((track) => track.stop())
-    localVideoStream.value = null
-    localScreenStream.value?.getTracks().forEach((track) => track.stop())
-    localScreenStream.value = null
+    removeLocalScreenStream()
+    removeLocalVideoStream()
 
     // Close transports
     sendTransport?.close()
@@ -389,12 +390,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     socket = null
     device = null
 
-    remotePeers.value = new Map()
-    isConnected.value = false
-    isMuted.value = false
-    isVideoEnabled.value = false
-    isScreenSharing.value = false
-    localSocketId.value = null
+    resetState()
   }
 
   // Auto-cleanup when the component using this composable is unmounted
@@ -403,28 +399,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
   })
 
   return {
-    // State (readonly refs)
-    isMuted: readonly(isMuted),
-    isVideoEnabled: readonly(isVideoEnabled),
-    isScreenSharing: readonly(isScreenSharing),
-    isConnected: readonly(isConnected),
-    remotePeers: readonly(remotePeers),
-    localAudioStream: readonly(localAudioStream),
-    localVideoStream: readonly(localVideoStream),
-    localScreenStream: readonly(localScreenStream),
-    localSocketId: readonly(localSocketId),
-
-    // Actions
     connect,
     disconnect,
-    toggleMute,
-    mute,
-    unmute,
-    startVideo,
-    stopVideo,
-    toggleVideo,
-    startScreenShare,
-    stopScreenShare,
-    toggleScreenShare,
   }
 }
