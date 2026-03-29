@@ -4,15 +4,10 @@ import { ref, watch, onUnmounted, type Ref } from 'vue'
  * Monitors the volume of a MediaStream and exposes a reactive `isTalking` ref
  * that becomes `true` when the RMS audio level exceeds the given threshold.
  *
- * @param stream      - A ref (or plain value) pointing to the MediaStream to analyse.
  * @param threshold   - RMS value (0–1) above which the peer is considered "talking". Default: 0.01
  * @param smoothing   - AnalyserNode smoothingTimeConstant (0–1). Default: 0.8
  */
-export function useAudioLevel(
-  stream: Ref<MediaStream | null | undefined> | MediaStream,
-  threshold = 0.01,
-  smoothing = 0.8,
-) {
+export function useAudioLevel(threshold = 0.01, smoothing = 0.8) {
   const isTalking = ref(false)
 
   let audioContext: AudioContext | null = null
@@ -70,24 +65,7 @@ export function useAudioLevel(
     isTalking.value = false
   }
 
-  // Support both a plain MediaStream and a Ref<MediaStream>
-  if ('value' in stream) {
-    watch(
-      stream,
-      (newStream) => {
-        if (newStream) {
-          start(newStream)
-        } else {
-          stop()
-        }
-      },
-      { immediate: true },
-    )
-  } else if (stream) {
-    start(stream)
-  }
-
   onUnmounted(stop)
 
-  return { isTalking }
+  return { isTalking, start }
 }

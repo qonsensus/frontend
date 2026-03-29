@@ -16,6 +16,11 @@
     <div v-else class="flex-1 flex items-center justify-center">
       <p class="text-sm text-white/60 select-none">{{ label ?? peer.socketId ?? 'Participant' }}</p>
     </div>
+    <audio
+      :ref="(el) => attachStream(el as HTMLAudioElement, peer.audioStream!)"
+      autoplay
+      :muted="isLocal"
+    />
 
     <!-- Expand / collapse button (only for expandable cards) -->
     <Button
@@ -34,8 +39,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onBeforeUnmount } from 'vue'
-import type { RemotePeer } from '@/composables/services/useMediasoupSocket.ts'
+import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
+import { mediasoupKey, type RemotePeer } from '@/composables/services/useMediasoupSocket.ts'
 import { useAudioLevel } from '@/composables/useAudioLevel.ts'
 import { Button } from '@/components/ui/button'
 import { Expand, Minimize } from 'lucide-vue-next'
@@ -51,32 +56,45 @@ defineEmits<{
   (e: 'update:expanded', value: boolean): void
 }>()
 
-// computed ref so the analyser reconnects automatically if the stream changes
-const stream = computed(() => props.peer.stream)
-const { isTalking } = useAudioLevel(stream, 0.01, 0.99)
-
-const hasVideo = computed(
-  () => !!props.peer.videoProducerId && props.peer.stream.getVideoTracks().length > 0,
-)
 const videoEl = ref<HTMLVideoElement | null>(null)
 
+const { isTalking, start } = useAudioLevel(0.01, 0.9)
+
+const mediasoup = inject(mediasoupKey)!
+
+const hasVideo = computed(() => !!props.peer.videoProducerId)
+const isLocal = computed(() => props.peer.socketId.endsWith('(you)'))
+const videoStream = computed(() => props.peer.videoStream)
+
 watch(
-  [hasVideo, videoEl],
-  ([video, el]) => {
-    if (video && el) {
-      el.srcObject = props.peer.stream
-    } else if (!video && el) {
-      el.srcObject = null
+  () => props.peer.audioStream,
+  (stream) => {
+    if (stream && !isLocal.value) {
+      start(stream)
     }
   },
-  { immediate: true, flush: 'post' },
+  { immediate: true },
 )
 
-onBeforeUnmount(() => {
-  if (videoEl.value) {
-    videoEl.value.srcObject = null
+watch(hasVideo, (newVal) => {
+  if (newVal && (videoStream.value || mediasoup.localVideoStream.value)) {
+    nextTick(() => {
+      console.log('isLocal: ', isLocal.value)
+      if (isLocal.value) {
+        console.log(mediasoup.localVideoStream.value!)
+        attachStream(videoEl.value, mediasoup.localVideoStream.value!)
+      } else {
+        attachStream(videoEl.value, videoStream.value!)
+      }
+    })
   }
 })
+
+function attachStream(el: HTMLAudioElement | null, stream: MediaStream) {
+  if (el && el.srcObject !== stream) {
+    el.srcObject = stream
+  }
+}
 </script>
 
 <style scoped></style>

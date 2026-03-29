@@ -21,7 +21,8 @@ export interface RemotePeer {
   audioProducerId?: string
   videoProducerId?: string
   screenProducerId?: string
-  stream: MediaStream
+  audioStream?: MediaStream
+  videoStream?: MediaStream
   screenStream?: MediaStream
 }
 
@@ -94,12 +95,13 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
         .catch(errback)
     })
 
-    sendTransport.on('produce', async ({ kind, rtpParameters }, callback) => {
+    sendTransport.on('produce', async ({ kind, rtpParameters, appData }, callback) => {
       const { producerId } = await socket!.emitWithAck('produce', {
         roomId: resolvedRoomId,
         transportId: sendTransport!.id,
         kind,
         rtpParameters,
+        appData,
       })
       callback({ id: producerId })
     })
@@ -113,16 +115,8 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     // Listen for new producers from other peers
     socket.on(
       'newProducer',
-      async ({
-        producerId,
-        socketId,
-        kind,
-      }: {
-        producerId: string
-        socketId: string
-        kind: string
-      }) => {
-        await consume(producerId, socketId, kind)
+      async ({ producerId, socketId }: { producerId: string; socketId: string }) => {
+        await consume(producerId, socketId)
       },
     )
 
@@ -160,13 +154,13 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
 
     // Consume existing producers
     for (const { producerId, socketId, kind } of joinAck.existingProducers) {
-      await consume(producerId, socketId, kind)
+      await consume(producerId, socketId)
     }
 
     isConnected.value = true
   }
 
-  async function consume(producerId: string, socketId: string, kind: string) {
+  async function consume(producerId: string, socketId: string) {
     if (!recvTransport || !socket || !device) return
 
     const params = await socket.emitWithAck('consume', {
@@ -181,6 +175,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
       producerId: params.producerId,
       kind: params.kind,
       rtpParameters: params.rtpParameters,
+      appData: params.appData,
     })
     consumers.set(producerId, consumer)
 
@@ -192,26 +187,29 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     // Get or create remote peer entry
     let peer = remotePeers.value.get(socketId)
     if (!peer) {
-      peer = { socketId, stream: new MediaStream() }
+      peer = { socketId }
       remotePeers.value.set(socketId, peer)
     }
 
-    if (kind === 'audio') {
+    if (consumer.kind === 'audio') {
       peer.audioProducerId = producerId
-    } else if (!peer.videoProducerId) {
-      peer.videoProducerId = producerId
+      peer.audioStream = new MediaStream()
+      peer.audioStream.addTrack(consumer.track)
     } else {
-      // Second video producer = screen share
-      peer.screenProducerId = producerId
-      if (!peer.screenStream) {
+      const { source } = consumer.appData
+      if (source === 'camera') {
+        peer.videoProducerId = producerId
+        peer.videoStream = new MediaStream()
+        peer.videoStream.addTrack(consumer.track)
+      } else if (source === 'screen') {
+        peer.screenProducerId = producerId
         peer.screenStream = new MediaStream()
+        peer.screenStream.addTrack(consumer.track)
+      } else {
+        console.warn(`Unknown producer source "${source}" for producer ${producerId}`)
+        console.warn('Consumer:', consumer)
       }
-      peer.screenStream.addTrack(consumer.track)
-      remotePeers.value = new Map(remotePeers.value)
-      return
     }
-
-    peer.stream.addTrack(consumer.track)
 
     // Trigger reactivity
     remotePeers.value = new Map(remotePeers.value)
@@ -256,6 +254,9 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     videoProducer = await sendTransport.produce({
       track: videoStream.getVideoTracks()[0],
       ...(vp9Codec ? { codec: vp9Codec } : {}),
+      appData: {
+        source: 'camera',
+      },
     })
     isVideoEnabled.value = true
   }
