@@ -226,17 +226,13 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
   })
 
   async function mute() {
-    console.log('mute')
     if (!audioProducer) return
     audioProducer.pause()
-    console.log(audioProducer)
   }
 
   async function unmute() {
-    console.log('unmute')
     if (!audioProducer) return
     audioProducer.resume()
-    console.log(audioProducer)
   }
 
   // endregion
