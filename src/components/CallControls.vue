@@ -16,7 +16,7 @@
       :variant="callStore.isVideoOn ? 'default' : 'outline'"
       @click="callStore.toggleVideo()"
     >
-      <VideoOff v-if="callStore.isVideoOn" />
+      <VideoOff v-if="!callStore.isVideoOn" />
       <Video v-else />
     </Button>
     <Button
@@ -24,7 +24,7 @@
       :variant="callStore.isScreenShareOn ? 'default' : 'outline'"
       @click="callStore.toggleScreenShare()"
     >
-      <ScreenShareOff v-if="callStore.isScreenShareOn" />
+      <ScreenShareOff v-if="!callStore.isScreenShareOn" />
       <ScreenShare v-else />
     </Button>
     <Button size="icon-lg" variant="destructive" @click="disconnect()">

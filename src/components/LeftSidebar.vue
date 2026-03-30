@@ -20,14 +20,33 @@
           </AvatarFallback>
         </Avatar>
       </RouterLink>
-      <ButtonGroup orientation="vertical">
-        <Button variant="outline" size="icon-lg" @click="isMicOn = !isMicOn">
-          <Mic v-if="isMicOn" />
-          <MicOff class="text-red-400" v-else />
+      <ButtonGroup orientation="vertical" v-if="callStore.callState === 'in-call'">
+        <Button
+          size="icon-lg"
+          :variant="callStore.isVoiceOn ? 'outline' : 'destructive'"
+          @click="callStore.toggleVoice()"
+        >
+          <MicOff v-if="!callStore.isVoiceOn" />
+          <Mic v-else />
         </Button>
-        <Button variant="outline" size="icon-lg" @click="isHeadphonesOn = !isHeadphonesOn">
-          <Headphones v-if="isHeadphonesOn" />
-          <HeadphoneOff class="text-red-400" v-else />
+        <Button size="icon-lg" variant="outline">
+          <Headset />
+        </Button>
+        <Button
+          size="icon-lg"
+          :variant="callStore.isVideoOn ? 'default' : 'outline'"
+          @click="callStore.toggleVideo()"
+        >
+          <VideoOff v-if="!callStore.isVideoOn" />
+          <Video v-else />
+        </Button>
+        <Button
+          size="icon-lg"
+          :variant="callStore.isScreenShareOn ? 'default' : 'outline'"
+          @click="callStore.toggleScreenShare()"
+        >
+          <ScreenShareOff v-if="!callStore.isScreenShareOn" />
+          <ScreenShare v-else />
         </Button>
       </ButtonGroup>
       <Button variant="outline" size="icon-lg">
@@ -45,11 +64,14 @@ import {
   Settings,
   Mic,
   MicOff,
-  Headphones,
-  HeadphoneOff,
   User,
   LogOut,
   House,
+  Headset,
+  Video,
+  VideoOff,
+  ScreenShare,
+  ScreenShareOff,
 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
@@ -58,11 +80,13 @@ import { ButtonGroup } from '@/components/ui/button-group'
 import { useUserStore } from '@/stores/user.ts'
 import { useAuthService } from '@/composables/services/useAuthService.ts'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { useCallStore } from '@/stores/call.ts'
 
 const { user } = useUserStore()
 const isMicOn = ref(true)
 const isHeadphonesOn = ref(true)
 const { logout } = useAuthService()
+const callStore = useCallStore()
 </script>
 
 <style scoped></style>
