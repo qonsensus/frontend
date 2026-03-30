@@ -2,10 +2,10 @@
   <div class="w-full border-t p-4 flex items-center justify-center gap-2">
     <Button
       size="icon-lg"
-      :variant="mediasoup.isMuted.value ? 'destructive' : 'outline'"
-      @click="mediasoup.toggleMute()"
+      :variant="callStore.isVoiceOn ? 'outline' : 'destructive'"
+      @click="callStore.toggleVoice()"
     >
-      <MicOff v-if="mediasoup.isMuted.value" />
+      <MicOff v-if="!callStore.isVoiceOn" />
       <Mic v-else />
     </Button>
     <Button size="icon-lg" variant="outline">
@@ -13,18 +13,18 @@
     </Button>
     <Button
       size="icon-lg"
-      :variant="mediasoup.isVideoEnabled.value ? 'default' : 'outline'"
-      @click="mediasoup.toggleVideo()"
+      :variant="callStore.isVideoOn ? 'default' : 'outline'"
+      @click="callStore.toggleVideo()"
     >
-      <VideoOff v-if="!mediasoup.isVideoEnabled.value" />
+      <VideoOff v-if="callStore.isVideoOn" />
       <Video v-else />
     </Button>
     <Button
       size="icon-lg"
-      :variant="mediasoup.isScreenSharing.value ? 'default' : 'outline'"
-      @click="mediasoup.toggleScreenShare()"
+      :variant="callStore.isScreenShareOn ? 'default' : 'outline'"
+      @click="callStore.toggleScreenShare()"
     >
-      <ScreenShareOff v-if="mediasoup.isScreenSharing.value" />
+      <ScreenShareOff v-if="callStore.isScreenShareOn" />
       <ScreenShare v-else />
     </Button>
     <Button size="icon-lg" variant="destructive" @click="disconnect()">
@@ -49,12 +49,14 @@ import {
 import { mediasoupKey } from '@/composables/services/useMediasoupSocket.ts'
 import router from '@/router'
 import { useRoute } from 'vue-router'
+import { useCallStore } from '@/stores/call.ts'
 
-const mediasoup = inject(mediasoupKey)!
+const mediasoup = inject(mediasoupKey)
+const callStore = useCallStore()
 const route = useRoute()
 
 function disconnect() {
-  mediasoup.disconnect()
+  mediasoup?.disconnect()
   router.push({ name: 'Chat', params: { conversationId: route.params.conversationId } })
 }
 </script>

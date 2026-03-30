@@ -103,7 +103,20 @@ export const useCallStore = defineStore('CallStore', () => {
     isScreenShareOn.value = false
   }
 
+  function toggleVoice() {
+    isVoiceOn.value = !isVoiceOn.value
+  }
+
+  function toggleVideo() {
+    isVideoOn.value = !isVideoOn.value
+  }
+
+  function toggleScreenShare() {
+    isScreenShareOn.value = !isScreenShareOn.value
+  }
+
   return {
+    callState: readonly(callState),
     peers: readonly(peers),
     isVoiceOn: readonly(isVoiceOn),
     isVideoOn: readonly(isVideoOn),
@@ -123,5 +136,8 @@ export const useCallStore = defineStore('CallStore', () => {
     removeLocalVideoStream,
     removeLocalScreenStream,
     resetState,
+    toggleVoice,
+    toggleVideo,
+    toggleScreenShare,
   }
 })
