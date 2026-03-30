@@ -20,7 +20,7 @@
       v-if="hasScreenShare"
       class="absolute top-2 right-2 z-10 transition-opacity duration-150"
       @click.stop="selectScreenShare()"
-      :variant="isCurrentScreenShare ? 'default' : 'outline'"
+      :variant="isCurrentScreenShare ? 'default' : 'secondary'"
       size="icon-sm"
     >
       <ScreenShare />
