@@ -228,6 +228,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
         peer.videoStream = new MediaStream()
         peer.videoStream.addTrack(consumer.track)
       } else if (source === 'screen') {
+        console.log('Received screen share stream from peer', socketId)
         peer.screenProducerId = producerId
         peer.screenStream = new MediaStream()
         peer.screenStream.addTrack(consumer.track)
@@ -322,6 +323,9 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     screenShareProducer = await sendTransport.produce({
       track: screenTrack,
       codec: vp9Codec,
+      appData: {
+        source: 'screen',
+      },
       encodings: [
         {
           maxBitrate: 5_000_000, // 5 Mbps ceiling
