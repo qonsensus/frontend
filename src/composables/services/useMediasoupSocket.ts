@@ -146,6 +146,26 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
       callStore.removePeer(peer)
     })
 
+    socket.on(
+      'producerClosed',
+      ({ producerId, socketId }: { producerId: string; socketId: string }) => {
+        const peer = peers.value.get(socketId)
+        if (!peer) return
+        const consumer = consumers.get(producerId)
+        if (!consumer) return
+        if (consumer.kind === 'video') {
+          const source = consumer.appData.source
+          if (source === 'camera') {
+            callStore.removeVideoStreamFromPeer(peer.socketId)
+          } else if (source === 'screen') {
+            callStore.removeScreenStreamFromPeer(peer.socketId)
+          }
+        }
+        consumer.close()
+        consumers.delete(producerId)
+      },
+    )
+
     // Consume existing producers
     for (const { producerId, socketId } of joinAck.existingProducers) {
       await consume(producerId, socketId)
@@ -264,9 +284,11 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
 
   async function stopVideo() {
     if (!videoProducer) return
+    const producerId = videoProducer.id
     videoProducer.close()
     videoProducer = null
     callStore.removeLocalVideoStream()
+    socket?.emitWithAck('closeProducer', { roomId, producerId })
   }
 
   // endregion

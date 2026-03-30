@@ -115,6 +115,22 @@ export const useCallStore = defineStore('CallStore', () => {
     isScreenShareOn.value = !isScreenShareOn.value
   }
 
+  function removeVideoStreamFromPeer(peerId: string) {
+    const peer = peers.value.get(peerId)
+    if (peer && peer.videoStream) {
+      peer.videoStream.getTracks().forEach((track) => track.stop())
+      peer.videoStream = undefined
+    }
+  }
+
+  function removeScreenStreamFromPeer(peerId: string) {
+    const peer = peers.value.get(peerId)
+    if (peer && peer.screenStream) {
+      peer.screenStream.getTracks().forEach((track) => track.stop())
+      peer.screenStream = undefined
+    }
+  }
+
   return {
     callState: readonly(callState),
     peers: readonly(peers),
@@ -139,5 +155,7 @@ export const useCallStore = defineStore('CallStore', () => {
     toggleVoice,
     toggleVideo,
     toggleScreenShare,
+    removeVideoStreamFromPeer,
+    removeScreenStreamFromPeer,
   }
 })
