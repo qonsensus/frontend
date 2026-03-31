@@ -37,23 +37,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
 
   // Reactive state
   const { peers, isVoiceOn, isVideoOn, isScreenShareOn } = storeToRefs(useCallStore())
-  const {
-    removePeer,
-    addPeer,
-    setCallState,
-    getPeer,
-    unmuteVoice,
-    muteVoice,
-    enableVideo,
-    disableVideo,
-    enableScreenShare,
-    disableScreenShare,
-    setLocalVideoStream,
-    setLocalScreenStream,
-    removeLocalScreenStream,
-    removeLocalVideoStream,
-    resetState,
-  } = useCallStore()
+  const callStore = useCallStore()
 
   // Internal state (non-reactive)
   let socket: Socket | null = null
@@ -66,6 +50,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
   const consumers = new Map<string, Consumer>()
 
   async function connect() {
+    callStore.resetState()
     socket = io(`${config.apiUrl}/mediasoup`, {
       transports: ['websocket'],
       auth: {
@@ -158,15 +143,35 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
         }
       }
 
-      removePeer(peer)
+      callStore.removePeer(peer)
     })
+
+    socket.on(
+      'producerClosed',
+      ({ producerId, socketId }: { producerId: string; socketId: string }) => {
+        const peer = peers.value.get(socketId)
+        if (!peer) return
+        const consumer = consumers.get(producerId)
+        if (!consumer) return
+        if (consumer.kind === 'video') {
+          const source = consumer.appData.source
+          if (source === 'camera') {
+            callStore.removeVideoStreamFromPeer(peer.socketId)
+          } else if (source === 'screen') {
+            callStore.removeScreenStreamFromPeer(peer.socketId)
+          }
+        }
+        consumer.close()
+        consumers.delete(producerId)
+      },
+    )
 
     // Consume existing producers
     for (const { producerId, socketId } of joinAck.existingProducers) {
       await consume(producerId, socketId)
     }
-    addPeer({
-      socketId: socket.id!,
+    callStore.addPeer({
+      socketId: socket.id! + ' (YOU)',
       isLocal: true,
       audioProducerId: undefined,
       videoProducerId: undefined,
@@ -175,7 +180,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
       videoStream: undefined,
       screenStream: undefined,
     })
-    setCallState('in-call')
+    callStore.setCallState('in-call')
   }
 
   async function consume(producerId: string, socketId: string) {
@@ -203,13 +208,13 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     })
 
     // Get or create remote peer entry
-    let peer = getPeer(socketId)
+    let peer = callStore.getPeer(socketId)
     if (!peer) {
-      addPeer({
+      callStore.addPeer({
         socketId,
         isLocal: false,
       })
-      peer = getPeer(socketId)!
+      peer = callStore.getPeer(socketId)!
     }
 
     if (consumer.kind === 'audio') {
@@ -223,6 +228,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
         peer.videoStream = new MediaStream()
         peer.videoStream.addTrack(consumer.track)
       } else if (source === 'screen') {
+        console.log('Received screen share stream from peer', socketId)
         peer.screenProducerId = producerId
         peer.screenStream = new MediaStream()
         peer.screenStream.addTrack(consumer.track)
@@ -236,23 +242,18 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
   // region Voice
 
   watch(isVoiceOn, (newVal) => {
-    if (newVal) {
-      void mute()
-    } else {
-      void unmute()
-    }
+    if (newVal) void unmute()
+    else void mute()
   })
 
   async function mute() {
-    if (!audioProducer || !isVoiceOn.value) return
+    if (!audioProducer) return
     audioProducer.pause()
-    muteVoice()
   }
 
   async function unmute() {
-    if (!audioProducer || isVoiceOn.value) return
+    if (!audioProducer) return
     audioProducer.resume()
-    unmuteVoice()
   }
 
   // endregion
@@ -260,19 +261,16 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
   // region Video
 
   watch(isVideoOn, (newVal) => {
-    if (newVal) {
-      void stopVideo()
-    } else {
-      void startVideo()
-    }
+    if (newVal) void startVideo()
+    else void stopVideo()
   })
 
   async function startVideo() {
-    if (!sendTransport || isVideoOn.value) return
+    if (!sendTransport) return
     const videoStream = await navigator.mediaDevices.getUserMedia({
       video: { aspectRatio: { ideal: 16 / 9 } },
     })
-    setLocalVideoStream(videoStream)
+    callStore.setLocalVideoStream(videoStream)
     const vp9Codec = device!.recvRtpCapabilities.codecs?.find(
       (c) => c.mimeType.toLowerCase() === 'video/vp9',
     )
@@ -283,15 +281,15 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
         source: 'camera',
       },
     })
-    enableVideo()
   }
 
   async function stopVideo() {
-    if (!videoProducer || !isVideoOn) return
+    if (!videoProducer) return
+    const producerId = videoProducer.id
     videoProducer.close()
     videoProducer = null
-    removeLocalVideoStream()
-    disableVideo()
+    callStore.removeLocalVideoStream()
+    socket?.emitWithAck('closeProducer', { roomId, producerId })
   }
 
   // endregion
@@ -299,15 +297,12 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
   // region Screen Share
 
   watch(isScreenShareOn, (newVal) => {
-    if (newVal) {
-      void stopScreenShare()
-    } else {
-      void startScreenShare()
-    }
+    if (newVal) void startScreenShare()
+    else void stopScreenShare()
   })
 
   async function startScreenShare() {
-    if (!sendTransport || isScreenShareOn.value) return
+    if (!sendTransport) return
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
       video: {
         width: { ideal: 1920, max: 1920 },
@@ -320,7 +315,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
       screenStream.getTracks().forEach((t) => t.stop())
       return
     }
-    setLocalScreenStream(screenStream)
+    callStore.setLocalScreenStream(screenStream)
     const vp9Codec = device!.recvRtpCapabilities.codecs?.find(
       (c) => c.mimeType.toLowerCase() === 'video/vp9',
     )
@@ -328,6 +323,9 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     screenShareProducer = await sendTransport.produce({
       track: screenTrack,
       codec: vp9Codec,
+      appData: {
+        source: 'screen',
+      },
       encodings: [
         {
           maxBitrate: 5_000_000, // 5 Mbps ceiling
@@ -343,7 +341,6 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
         videoGoogleMinBitrate: 1000, // kbps — prevents the bitrate dropping too low
       },
     })
-    enableScreenShare()
     // Handle the user clicking the browser's native "Stop sharing" button
     screenTrack.addEventListener('ended', () => {
       stopScreenShare()
@@ -351,11 +348,10 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
   }
 
   async function stopScreenShare() {
-    if (!screenShareProducer || !isScreenShareOn.value) return
+    if (!screenShareProducer) return
     screenShareProducer.close()
     screenShareProducer = null
-    removeLocalScreenStream()
-    disableScreenShare()
+    callStore.removeLocalScreenStream()
   }
 
   // endregion
@@ -376,8 +372,8 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     screenShareProducer = null
 
     // Stop local media tracks
-    removeLocalScreenStream()
-    removeLocalVideoStream()
+    callStore.removeLocalScreenStream()
+    callStore.removeLocalVideoStream()
 
     // Close transports
     sendTransport?.close()
@@ -390,7 +386,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     socket = null
     device = null
 
-    resetState()
+    callStore.resetState()
   }
 
   // Auto-cleanup when the component using this composable is unmounted
