@@ -31,14 +31,14 @@ export function useNotificationSocket() {
     useFriendsStore().addIncomingFriendRequest(data.listItem)
   })
 
-  socket.on('newConversation', (data: components['schemas']['ConversationDto']) => {
+  socket.on('newConversation', (data: components['schemas']['ChatDto']) => {
     useConversationsStore().addConversation(data)
   })
 
-  socket.on('newMessage', (data: components['schemas']['ConversationMessageDto']) => {
+  socket.on('newMessage', (data: components['schemas']['ChatMessageDto']) => {
     // If the message belongs to the currently open conversation, add it to the messages list
     const conversationsStore = useConversationsStore()
-    if (conversationsStore.currentlyOpenConversation?.id === data.conversationId) {
+    if (conversationsStore.currentlyOpenConversation?.id === data.chatId) {
       conversationsStore.currentlyOpenConversationMessages.push(data)
     }
   })

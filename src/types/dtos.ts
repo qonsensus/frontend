@@ -4,14 +4,14 @@
  */
 
 export interface paths {
-    "/": {
+    "/health": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["AppController_getHello"];
+        get: operations["AppController_getHealth"];
         put?: never;
         post?: never;
         delete?: never;
@@ -268,48 +268,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/conversation": {
+    "/chat": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["ConversationController_getConversation"];
+        /** Get all chats the authenticated user is part of, along with the latest message in each chat. */
+        get: operations["ChatController_getMyChats"];
         put?: never;
-        post: operations["ConversationController_createConversation"];
+        /** Create a new conversation with specified participants. */
+        post: operations["ChatController_createChat"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/conversation/{conversationId}/messages": {
+    "/chat/{chatId}/messages": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["ConversationController_getConversationMessages"];
+        /** Get messages for a specific chat. */
+        get: operations["ChatController_getChatMessages"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/conversation/{conversationId}/message": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["ConversationController_sendMessage"];
         delete?: never;
         options?: never;
         head?: never;
@@ -375,35 +362,35 @@ export interface components {
             user: components["schemas"]["User"];
             server: components["schemas"]["Server"];
         };
-        ConversationMessage: {
+        ChatMessage: {
             id: string;
             /** Format: date-time */
             createdAt: string;
             content: string;
-            conversationId: string;
-            conversation: components["schemas"]["Conversation"];
+            chatId: string;
+            chat: components["schemas"]["Chat"];
             author: components["schemas"]["User"];
         };
-        Conversation: {
+        Chat: {
             id: string;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
             participantsHash?: string;
-            participants: components["schemas"]["UserToConversation"][];
-            messages: components["schemas"]["ConversationMessage"][];
+            participants: components["schemas"]["UserToChat"][];
+            messages: components["schemas"]["ChatMessage"][];
         };
-        UserToConversation: {
+        UserToChat: {
             id: string;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
             lastReadAt: string;
             userId: string;
-            conversationId: string;
+            chatId: string;
             user: components["schemas"]["User"];
-            conversation: components["schemas"]["Conversation"];
+            chat: components["schemas"]["Chat"];
         };
         Friendship: {
             id: string;
@@ -428,7 +415,7 @@ export interface components {
             passwordHash: string;
             profile: components["schemas"]["Profile"];
             servers: components["schemas"]["UserToServer"][];
-            conversations: components["schemas"]["UserToConversation"][];
+            chats: components["schemas"]["UserToChat"][];
             chatChannelStates: components["schemas"]["UserToChatChannel"][];
             sentFriendships: components["schemas"]["Friendship"][];
             receivedFriendships: components["schemas"]["Friendship"][];
@@ -511,14 +498,20 @@ export interface components {
             handle: string;
             exists: boolean;
         };
-        ConversationDto: {
+        ChatDto: {
             id: string;
             participants: components["schemas"]["Profile"][];
+            latestMessageContent: string | null;
+            /** Format: date-time */
+            latestMessageCreatedAt: string | null;
+            unseenMessagesCount: number;
+            /** Format: date-time */
+            lastReadAt: string;
         };
-        ConversationMessageDto: {
+        ChatMessageDto: {
             id: string;
             content: string;
-            conversationId: string;
+            chatId: string;
             authorId: string;
             authorProfileId: string;
             authorName: string;
@@ -526,18 +519,19 @@ export interface components {
             createdAt: string;
             authorAvatarUrl?: string;
         };
-        CreateConversationDto: {
+        CreateChatDto: {
             name: string;
             participantIds: string[];
-        };
-        SendMessageDto: {
-            message: string;
         };
         IncomingFriendRequestWsDto: {
             friendshipId: string;
             senderAvatarUrl: string;
             senderDisplayName: string;
             listItem: components["schemas"]["IncomingFrienshipRequestDto"];
+        };
+        SendMessageWsDto: {
+            chatId: string;
+            message: string;
         };
     };
     responses: never;
@@ -548,7 +542,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    AppController_getHello: {
+    AppController_getHealth: {
         parameters: {
             query?: never;
             header?: never;
@@ -561,9 +555,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": string;
-                };
+                content?: never;
             };
         };
     };
@@ -926,7 +918,7 @@ export interface operations {
             };
         };
     };
-    ConversationController_getConversation: {
+    ChatController_getMyChats: {
         parameters: {
             query?: never;
             header?: never;
@@ -940,12 +932,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConversationDto"][];
+                    "application/json": components["schemas"]["ChatDto"][];
                 };
             };
         };
     };
-    ConversationController_createConversation: {
+    ChatController_createChat: {
         parameters: {
             query?: never;
             header?: never;
@@ -954,7 +946,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateConversationDto"];
+                "application/json": components["schemas"]["CreateChatDto"];
             };
         };
         responses: {
@@ -963,17 +955,20 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConversationDto"];
+                    "application/json": components["schemas"]["ChatDto"];
                 };
             };
         };
     };
-    ConversationController_getConversationMessages: {
+    ChatController_getChatMessages: {
         parameters: {
-            query?: never;
+            query: {
+                before: string;
+                take: number;
+            };
             header?: never;
             path: {
-                conversationId: string;
+                chatId: string;
             };
             cookie?: never;
         };
@@ -984,32 +979,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConversationMessageDto"][];
-                };
-            };
-        };
-    };
-    ConversationController_sendMessage: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                conversationId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SendMessageDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConversationMessageDto"];
+                    "application/json": components["schemas"]["ChatMessageDto"][];
                 };
             };
         };

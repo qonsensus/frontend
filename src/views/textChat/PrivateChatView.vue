@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { useConversationService } from '@/composables/services/useConversationService.ts'
+import { useChatService } from '@/composables/services/useChatService.ts'
 import { onMounted, watch } from 'vue'
 import type { components } from '@/types/dtos.ts'
 import PrivateChatPanel from '@/components/PrivateChatPanel.vue'
@@ -12,7 +12,7 @@ import { storeToRefs } from 'pinia'
 import { useConversationsStore } from '@/stores/conversations.ts'
 
 const route = useRoute()
-const { fetchConversationMessages, sendMessage } = useConversationService()
+const { fetchConversationMessages, sendMessage } = useChatService()
 const { conversations, currentlyOpenConversation, currentlyOpenConversationMessages } =
   storeToRefs(useConversationsStore())
 

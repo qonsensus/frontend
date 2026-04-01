@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { components } from '@/types/dtos.ts'
-import { useConversationService } from '@/composables/services/useConversationService.ts'
+import { useChatService } from '@/composables/services/useChatService.ts'
 
 export const useConversationsStore = defineStore('ConversationsStore', () => {
   const conversations = ref<components['schemas']['ConversationDto'][]>([])
@@ -17,7 +17,7 @@ export const useConversationsStore = defineStore('ConversationsStore', () => {
   }
 
   async function fetchConversations() {
-    const { fetchMyConversations } = useConversationService()
+    const { fetchMyConversations } = useChatService()
     conversations.value = await fetchMyConversations()
   }
 
