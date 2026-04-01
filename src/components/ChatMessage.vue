@@ -33,8 +33,8 @@ import { Badge } from '@/components/ui/badge'
 const { user } = storeToRefs(useUserStore())
 
 const props = defineProps<{
-  message: components['schemas']['ConversationMessageDto']
-  prevMessage?: components['schemas']['ConversationMessageDto']
+  message: components['schemas']['ChatMessageDto']
+  prevMessage?: components['schemas']['ChatMessageDto']
 }>()
 
 const isMyMessage = computed(() => {

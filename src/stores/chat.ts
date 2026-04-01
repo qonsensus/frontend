@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { components } from '@/types/dtos.ts'
 import { type ChatDto, useChatService } from '@/composables/services/useChatService.ts'
 import type { Socket } from 'socket.io-client'
@@ -8,6 +8,9 @@ export const useChatStore = defineStore('ChatStore', () => {
   const socket = ref<Socket | null>(null)
   const chats = ref<ChatDto[]>([])
   const currentlyOpenChatId = ref<string | null>(null)
+  const currentlyOpenChat = computed(
+    () => chats.value.find((c) => c.id === currentlyOpenChatId.value) || null,
+  )
   const currentChatMessages = ref<components['schemas']['ChatMessageDto'][] | null>(null)
 
   async function fetchMyChats() {
@@ -16,6 +19,7 @@ export const useChatStore = defineStore('ChatStore', () => {
   }
 
   async function fetchChatMessages(chatId: string, before: Date, take?: number) {
+    if (chatId !== currentlyOpenChatId.value) return
     const service = useChatService()
     currentChatMessages.value = await service.fetchChatMessages(chatId, before, take)
   }
@@ -59,10 +63,18 @@ export const useChatStore = defineStore('ChatStore', () => {
     }
   }
 
+  function addChat(chat: ChatDto) {
+    const existingChat = chats.value.find((c) => c.id === chat.id)
+    if (!existingChat) {
+      chats.value.unshift(chat)
+    }
+  }
+
   return {
     socket,
     chats,
     currentlyOpenChatId,
+    currentlyOpenChat,
     currentChatMessages,
     fetchMyChats,
     fetchChatMessages,
@@ -71,5 +83,6 @@ export const useChatStore = defineStore('ChatStore', () => {
     addMessageToCurrentChat,
     chatTyping,
     chatStopTyping,
+    addChat,
   }
 })

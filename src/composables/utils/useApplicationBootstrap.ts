@@ -2,7 +2,8 @@ import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
 import { useUserStore } from '@/stores/user.ts'
 import { useFriendsStore } from '@/stores/friends.ts'
 import { useNotificationSocket } from '@/composables/services/useNotificationSocket.ts'
-import { useConversationsStore } from '@/stores/conversations.ts'
+import { useChatStore } from '@/stores/chat.ts'
+import { useChatSocket } from '@/composables/services/useChatSocket.ts'
 
 export async function useApplicationBootstrap() {
   // validate auth
@@ -12,7 +13,7 @@ export async function useApplicationBootstrap() {
   // init stores
   const userStore = useUserStore()
   const friendsStore = useFriendsStore()
-  const conversationsStore = useConversationsStore()
+  const chatStore = useChatStore()
 
   // fetch data
   await Promise.all([
@@ -20,9 +21,10 @@ export async function useApplicationBootstrap() {
     friendsStore.fetchFriends(),
     friendsStore.fetchIncomingFrienships(),
     friendsStore.fetchOutgoingFrienships(),
-    conversationsStore.fetchConversations(),
+    chatStore.fetchMyChats(),
   ])
 
-  // register socket
+  // register sockets
   useNotificationSocket()
+  useChatSocket().connect()
 }

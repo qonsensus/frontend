@@ -10,7 +10,7 @@
         <Button
           size="icon"
           variant="outline"
-          @click="$router.push(`/private-call/${currentlyOpenConversation?.id}`)"
+          @click="$router.push(`/private-call/${store.currentlyOpenChat?.id}`)"
         >
           <Phone />
         </Button>
@@ -25,11 +25,12 @@
     <ScrollArea class="min-h-0 flex-1" ref="scrollArea">
       <div class="px-4 flex flex-col h-full justify-end">
         <ChatMessage
-          v-for="(message, index) in messages"
+          v-for="(message, index) in store.currentChatMessages"
           :key="message.id"
           :message="message"
-          :prevMessage="messages[index - 1]"
+          :prevMessage="(store.currentChatMessages || [])[index - 1]"
         />
+        <p v-if="store.currentlyOpenChat?.typing">Typing...</p>
       </div>
     </ScrollArea>
     <div class="p-5">
@@ -93,18 +94,24 @@ import { InputGroup, InputGroupAddon } from '@/components/ui/input-group'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import ChatMessage from './ChatMessage.vue'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { storeToRefs } from 'pinia'
-import { useConversationsStore } from '@/stores/conversations.ts'
+import { useChatStore } from '@/stores/chat.ts'
+import { useChatSocket } from '@/composables/services/useChatSocket.ts'
+import { useRoute } from 'vue-router'
+import { useDebounceFn } from '@vueuse/core'
 
+const route = useRoute()
 const chatMessage = ref<string>('')
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
-const { currentlyOpenConversationMessages: messages, currentlyOpenConversation } =
-  storeToRefs(useConversationsStore())
+const store = useChatStore()
 const conversationTitle = computed(() => {
-  if (!currentlyOpenConversation.value) return 'Private Chat'
-  return currentlyOpenConversation.value.participants.map((p) => p.displayName).join(', ')
+  if (!store.currentlyOpenChat) return 'Private Chat'
+  return store.currentlyOpenChat.participants.map((p) => p.displayName).join(', ')
 })
 const scrollAreaRef = useTemplateRef('scrollArea')
+
+const stopTyping = useDebounceFn(() => {
+  useChatSocket().stopTyping(route.params.conversationId as string)
+}, 1000)
 
 function getScrollViewport(): HTMLElement | null {
   const root = scrollAreaRef.value?.$el as HTMLElement | undefined
@@ -113,10 +120,11 @@ function getScrollViewport(): HTMLElement | null {
 }
 
 watch(
-  () => messages.value.length,
+  () => store.currentChatMessages,
   (newValue, oldValue) => {
     nextTick(() => {
-      if (oldValue === 0 && newValue > 0) {
+      if (!oldValue || !newValue) return
+      if (oldValue.length === 0 && newValue.length > 0) {
         scrollChatToBottom(true)
       } else {
         scrollChatToBottom()
@@ -125,9 +133,13 @@ watch(
   },
 )
 
-const emit = defineEmits<{
-  (event: 'sendMessage', message: string): void
-}>()
+watch(chatMessage, () => {
+  if (!store.currentlyOpenChat) return
+  if (!store.currentlyOpenChat.typing) {
+    useChatSocket().startTyping(route.params.conversationId as string)
+  }
+  stopTyping()
+})
 
 function scrollChatToBottom(instant = false) {
   const viewport = getScrollViewport()
@@ -156,10 +168,14 @@ function insertTextAtCursor(text: string) {
   })
 }
 
-function sendMessage() {
+async function sendMessage() {
   if (chatMessage.value.trim() === '') return
-  emit('sendMessage', chatMessage.value)
+  await useChatSocket().sendMessage({
+    chatId: route.params.conversationId as string,
+    message: chatMessage.value.trim(),
+  })
   chatMessage.value = ''
+  useChatSocket().stopTyping(route.params.conversationId as string)
 }
 </script>
 

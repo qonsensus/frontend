@@ -4,7 +4,7 @@ import { config } from '@/config.ts'
 import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
 import type { components } from '@/types/dtos.ts'
 
-function useChatSocket() {
+export function useChatSocket() {
   const store = useChatStore()
 
   function connect() {
@@ -12,31 +12,34 @@ function useChatSocket() {
       console.warn('WebSocket is already connected.')
       return
     }
-    store.socket = io(`${config.apiUrl}/chat`, {
+    const socket = io(`${config.apiUrl}/chat`, {
       auth: {
         token: useAuthToken().getToken(),
       },
     })
 
-    store.socket.on(
+    socket.on(
       'newMessage',
       (payload: { chatId: string; message: components['schemas']['ChatMessageDto'] }) => {
+        console.log(payload)
         store.addMessageToCurrentChat(payload.message)
         store.incrementUnseenCount(payload.chatId)
       },
     )
 
-    store.socket.on('typing', (payload: { chatId: string }) => {
+    socket.on('typing', (payload: { chatId: string }) => {
       store.chatTyping(payload.chatId)
     })
 
-    store.socket.on('stopTyping', (payload: { chatId: string }) => {
+    socket.on('stopTyping', (payload: { chatId: string }) => {
       store.chatStopTyping(payload.chatId)
     })
 
-    store.socket.on('messagesRead', (payload: { chatId: string; userId: string }) => {
+    socket.on('messagesRead', (payload: { chatId: string; userId: string }) => {
       // TODO: Handle read receipts
     })
+
+    store.socket = socket
   }
 
   function disconnect() {
@@ -46,18 +49,16 @@ function useChatSocket() {
     }
   }
 
-  function sendMessage(data: components['schemas']['SendMessageWsDto']) {
+  async function sendMessage(data: components['schemas']['SendMessageWsDto']) {
     if (!store.socket) {
       console.error('WebSocket is not connected.')
       return
     }
-    store.socket.emitWithAck(
+    const response: components['schemas']['ChatMessageDto'] = await store.socket.emitWithAck(
       'sendMessage',
       data,
-      (response: components['schemas']['ChatMessageDto']) => {
-        store.addMessageToCurrentChat(response)
-      },
     )
+    store.addMessageToCurrentChat(response)
   }
 
   function startTyping(chatId: string) {

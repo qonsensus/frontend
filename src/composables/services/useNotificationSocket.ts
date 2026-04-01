@@ -4,8 +4,9 @@ import type { components } from '@/types/dtos.ts'
 import { toast } from 'vue-sonner'
 import { useFriendsStore } from '@/stores/friends.ts'
 import router from '@/router'
-import { useConversationsStore } from '@/stores/conversations.ts'
 import { config } from '@/config.ts'
+import { useChatStore } from '@/stores/chat.ts'
+import type { ChatDto } from '@/composables/services/useChatService.ts'
 
 export function useNotificationSocket() {
   const socket = io(config.apiUrl, {
@@ -32,14 +33,14 @@ export function useNotificationSocket() {
   })
 
   socket.on('newConversation', (data: components['schemas']['ChatDto']) => {
-    useConversationsStore().addConversation(data)
-  })
-
-  socket.on('newMessage', (data: components['schemas']['ChatMessageDto']) => {
-    // If the message belongs to the currently open conversation, add it to the messages list
-    const conversationsStore = useConversationsStore()
-    if (conversationsStore.currentlyOpenConversation?.id === data.chatId) {
-      conversationsStore.currentlyOpenConversationMessages.push(data)
+    const chat: ChatDto = {
+      ...data,
+      lastReadAt: new Date(data.lastReadAt),
+      latestMessageCreatedAt: data.latestMessageCreatedAt
+        ? new Date(data.latestMessageCreatedAt)
+        : null,
+      typing: false,
     }
+    useChatStore().addChat(chat)
   })
 }
