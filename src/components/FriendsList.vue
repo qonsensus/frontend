@@ -18,20 +18,20 @@ import type { components } from '@/types/dtos.ts'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import ProfileCard from '@/components/ProfileCard.vue'
 import { Button } from '@/components/ui/button'
-import { useConversationService } from '@/composables/services/useConversationService.ts'
+import { useChatService } from '@/composables/services/useChatService.ts'
 
-const { createConversation } = useConversationService()
+const { createChat } = useChatService()
 
 defineProps<{
   friends: components['schemas']['FriendshipListItemDto'][]
 }>()
 
 async function createConversationHandler(friendId: string) {
-  const dto: components['schemas']['CreateConversationDto'] = {
+  const dto: components['schemas']['CreateChatDto'] = {
     participantIds: [friendId],
     name: '',
   }
-  await createConversation(dto)
+  await createChat(dto)
 }
 </script>
 

@@ -10,7 +10,7 @@
         <Button
           size="icon"
           variant="outline"
-          @click="$router.push(`/private-call/${currentlyOpenConversation?.id}`)"
+          @click="$router.push(`/private-call/${store.currentlyOpenChat?.id}`)"
         >
           <Phone />
         </Button>
@@ -25,13 +25,19 @@
     <ScrollArea class="min-h-0 flex-1" ref="scrollArea">
       <div class="px-4 flex flex-col h-full justify-end">
         <ChatMessage
-          v-for="(message, index) in messages"
+          v-for="(message, index) in store.currentChatMessages"
           :key="message.id"
           :message="message"
-          :prevMessage="messages[index - 1]"
+          :prevMessage="(store.currentChatMessages || [])[index - 1]"
         />
       </div>
     </ScrollArea>
+    <!-- Typing indicator: lives outside the scroll area so it's always visible -->
+    <div class="px-5 h-5 flex items-center">
+      <p v-if="store.currentlyOpenChat?.typing" class="text-sm text-muted-foreground animate-pulse">
+        Typing...
+      </p>
+    </div>
     <div class="p-5">
       <InputGroup>
         <textarea
@@ -93,18 +99,24 @@ import { InputGroup, InputGroupAddon } from '@/components/ui/input-group'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import ChatMessage from './ChatMessage.vue'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { storeToRefs } from 'pinia'
-import { useConversationsStore } from '@/stores/conversations.ts'
+import { useChatStore } from '@/stores/chat.ts'
+import { useChatSocket } from '@/composables/services/useChatSocket.ts'
+import { useRoute } from 'vue-router'
+import { useDebounceFn } from '@vueuse/core'
 
+const route = useRoute()
 const chatMessage = ref<string>('')
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
-const { currentlyOpenConversationMessages: messages, currentlyOpenConversation } =
-  storeToRefs(useConversationsStore())
+const store = useChatStore()
 const conversationTitle = computed(() => {
-  if (!currentlyOpenConversation.value) return 'Private Chat'
-  return currentlyOpenConversation.value.participants.map((p) => p.displayName).join(', ')
+  if (!store.currentlyOpenChat) return 'Private Chat'
+  return store.currentlyOpenChat.participants.map((p) => p.displayName).join(', ')
 })
 const scrollAreaRef = useTemplateRef('scrollArea')
+
+const stopTyping = useDebounceFn(() => {
+  useChatSocket().stopTyping(route.params.conversationId as string)
+}, 1000)
 
 function getScrollViewport(): HTMLElement | null {
   const root = scrollAreaRef.value?.$el as HTMLElement | undefined
@@ -112,22 +124,61 @@ function getScrollViewport(): HTMLElement | null {
   return root.querySelector('[data-slot="scroll-area-viewport"]') as HTMLElement | null
 }
 
+/** Returns true when the user is close enough to the bottom that auto-scroll makes sense. */
+function isNearBottom(threshold = 150): boolean {
+  const viewport = getScrollViewport()
+  if (!viewport) return true
+  return viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight <= threshold
+}
+
+// Watch the array reference – fires when fetchChatMessages replaces the array
+// (initial load or switching to a different conversation).
 watch(
-  () => messages.value.length,
-  (newValue, oldValue) => {
+  () => store.currentChatMessages,
+  (newMessages) => {
+    if (newMessages && newMessages.length > 0) {
+      nextTick(() => scrollChatToBottom(true))
+    }
+  },
+)
+
+// Watch message count – fires when a new message is pushed into the existing array
+// (incoming message via socket).
+watch(
+  () => store.currentChatMessages?.length,
+  (newLen, oldLen) => {
+    // Skip: no messages yet, or the array reference just changed (handled above).
+    if (!oldLen || !newLen || newLen <= oldLen) return
     nextTick(() => {
-      if (oldValue === 0 && newValue > 0) {
-        scrollChatToBottom(true)
-      } else {
+      if (isNearBottom()) {
         scrollChatToBottom()
       }
     })
   },
 )
 
-const emit = defineEmits<{
-  (event: 'sendMessage', message: string): void
-}>()
+// Watch typing state – scroll down when the indicator appears so it's not cut off
+// (only if the user is already near the bottom).
+watch(
+  () => store.currentlyOpenChat?.typing,
+  (isTyping) => {
+    if (isTyping && isNearBottom()) {
+      nextTick(() => scrollChatToBottom())
+    }
+  },
+)
+
+watch(chatMessage, (newVal) => {
+  if (!store.currentlyOpenChat) return
+  if (newVal && newVal.length === 0) {
+    useChatSocket().stopTyping(route.params.conversationId as string)
+    return
+  }
+  if (!store.currentlyOpenChat.typing) {
+    useChatSocket().startTyping(route.params.conversationId as string)
+  }
+  stopTyping()
+})
 
 function scrollChatToBottom(instant = false) {
   const viewport = getScrollViewport()
@@ -156,10 +207,15 @@ function insertTextAtCursor(text: string) {
   })
 }
 
-function sendMessage() {
+async function sendMessage() {
   if (chatMessage.value.trim() === '') return
-  emit('sendMessage', chatMessage.value)
+  await useChatSocket().sendMessage({
+    chatId: route.params.conversationId as string,
+    message: chatMessage.value.trim(),
+  })
   chatMessage.value = ''
+  // Always scroll to bottom after the user sends their own message.
+  nextTick(() => scrollChatToBottom())
 }
 </script>
 

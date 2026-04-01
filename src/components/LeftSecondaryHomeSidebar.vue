@@ -8,7 +8,7 @@
     </InputGroup>
     <div class="flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto">
       <Card
-        v-for="conversation in conversations"
+        v-for="conversation in store.chats"
         :key="conversation.id"
         :class="{
           'p-2 rounded-md cursor-pointer transition duration-150 hover:bg-accent': true,
@@ -38,18 +38,17 @@
 <script setup lang="ts">
 import { Search } from 'lucide-vue-next'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
-import { storeToRefs } from 'pinia'
-import { useConversationsStore } from '@/stores/conversations.ts'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { useRoute } from 'vue-router'
 import { computed } from 'vue'
+import { useChatStore } from '@/stores/chat.ts'
 
-const { conversations } = storeToRefs(useConversationsStore())
+const store = useChatStore()
 const params = useRoute().params
 
 const selectedConversationId = computed<string | undefined>(() => {
-  return conversations.value.find((c) => c.id === params.conversationId)?.id
+  return store.chats.find((c) => c.id === params.conversationId)?.id
 })
 </script>
 

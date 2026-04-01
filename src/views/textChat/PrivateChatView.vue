@@ -1,47 +1,31 @@
 <template>
-  <PrivateChatPanel @sendMessage="sendMessageHandler" />
+  <PrivateChatPanel />
 </template>
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { useConversationService } from '@/composables/services/useConversationService.ts'
 import { onMounted, watch } from 'vue'
-import type { components } from '@/types/dtos.ts'
 import PrivateChatPanel from '@/components/PrivateChatPanel.vue'
-import { storeToRefs } from 'pinia'
-import { useConversationsStore } from '@/stores/conversations.ts'
+import { useChatStore } from '@/stores/chat.ts'
 
 const route = useRoute()
-const { fetchConversationMessages, sendMessage } = useConversationService()
-const { conversations, currentlyOpenConversation, currentlyOpenConversationMessages } =
-  storeToRefs(useConversationsStore())
+const store = useChatStore()
 
 watch(
   () => route.params.conversationId,
   async (newVal, oldVal) => {
     if (newVal && oldVal !== newVal) {
-      currentlyOpenConversation.value = conversations.value.find((c) => c.id === newVal) || null
-      currentlyOpenConversationMessages.value = await fetchConversationMessages(newVal as string)
+      await store.fetchChatMessages(newVal as string, new Date())
     }
   },
 )
 
 onMounted(async () => {
   if (route.params.conversationId) {
-    currentlyOpenConversation.value =
-      conversations.value.find((c) => c.id === route.params.conversationId) || null
-    currentlyOpenConversationMessages.value = await fetchConversationMessages(
-      route.params.conversationId as string,
-    )
+    store.setCurrentlyOpenChat(route.params.conversationId as string)
+    await store.fetchChatMessages(route.params.conversationId as string, new Date())
   }
 })
-
-async function sendMessageHandler(content: string) {
-  const dto: components['schemas']['SendMessageDto'] = {
-    message: content,
-  }
-  await sendMessage(route.params.conversationId as string, dto)
-}
 </script>
 
 <style scoped></style>
