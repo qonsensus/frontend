@@ -133,8 +133,12 @@ watch(
   },
 )
 
-watch(chatMessage, () => {
+watch(chatMessage, (newVal) => {
   if (!store.currentlyOpenChat) return
+  if (newVal && newVal.length === 0) {
+    useChatSocket().stopTyping(route.params.conversationId as string)
+    return
+  }
   if (!store.currentlyOpenChat.typing) {
     useChatSocket().startTyping(route.params.conversationId as string)
   }
@@ -175,7 +179,6 @@ async function sendMessage() {
     message: chatMessage.value.trim(),
   })
   chatMessage.value = ''
-  useChatSocket().stopTyping(route.params.conversationId as string)
 }
 </script>
 

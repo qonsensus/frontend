@@ -21,7 +21,7 @@ export function useChatSocket() {
     socket.on(
       'newMessage',
       (payload: { chatId: string; message: components['schemas']['ChatMessageDto'] }) => {
-        console.log(payload)
+        store.chatStopTyping(payload.chatId)
         store.addMessageToCurrentChat(payload.message)
         store.incrementUnseenCount(payload.chatId)
       },
