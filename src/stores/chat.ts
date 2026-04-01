@@ -34,6 +34,7 @@ export const useChatStore = defineStore('ChatStore', () => {
 
   function setCurrentlyOpenChat(chatId: string | null) {
     currentlyOpenChatId.value = chatId
+    currentChatMessages.value = null // clear stale messages immediately on switch
     if (chatId) {
       const chat = chats.value.find((c) => c.id === chatId)
       if (chat) {

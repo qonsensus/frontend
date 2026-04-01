@@ -30,9 +30,14 @@
           :message="message"
           :prevMessage="(store.currentChatMessages || [])[index - 1]"
         />
-        <p v-if="store.currentlyOpenChat?.typing">Typing...</p>
       </div>
     </ScrollArea>
+    <!-- Typing indicator: lives outside the scroll area so it's always visible -->
+    <div class="px-5 h-5 flex items-center">
+      <p v-if="store.currentlyOpenChat?.typing" class="text-sm text-muted-foreground animate-pulse">
+        Typing...
+      </p>
+    </div>
     <div class="p-5">
       <InputGroup>
         <textarea
@@ -119,17 +124,47 @@ function getScrollViewport(): HTMLElement | null {
   return root.querySelector('[data-slot="scroll-area-viewport"]') as HTMLElement | null
 }
 
+/** Returns true when the user is close enough to the bottom that auto-scroll makes sense. */
+function isNearBottom(threshold = 150): boolean {
+  const viewport = getScrollViewport()
+  if (!viewport) return true
+  return viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight <= threshold
+}
+
+// Watch the array reference – fires when fetchChatMessages replaces the array
+// (initial load or switching to a different conversation).
 watch(
   () => store.currentChatMessages,
-  (newValue, oldValue) => {
+  (newMessages) => {
+    if (newMessages && newMessages.length > 0) {
+      nextTick(() => scrollChatToBottom(true))
+    }
+  },
+)
+
+// Watch message count – fires when a new message is pushed into the existing array
+// (incoming message via socket).
+watch(
+  () => store.currentChatMessages?.length,
+  (newLen, oldLen) => {
+    // Skip: no messages yet, or the array reference just changed (handled above).
+    if (!oldLen || !newLen || newLen <= oldLen) return
     nextTick(() => {
-      if (!oldValue || !newValue) return
-      if (oldValue.length === 0 && newValue.length > 0) {
-        scrollChatToBottom(true)
-      } else {
+      if (isNearBottom()) {
         scrollChatToBottom()
       }
     })
+  },
+)
+
+// Watch typing state – scroll down when the indicator appears so it's not cut off
+// (only if the user is already near the bottom).
+watch(
+  () => store.currentlyOpenChat?.typing,
+  (isTyping) => {
+    if (isTyping && isNearBottom()) {
+      nextTick(() => scrollChatToBottom())
+    }
   },
 )
 
@@ -179,6 +214,8 @@ async function sendMessage() {
     message: chatMessage.value.trim(),
   })
   chatMessage.value = ''
+  // Always scroll to bottom after the user sends their own message.
+  nextTick(() => scrollChatToBottom())
 }
 </script>
 
