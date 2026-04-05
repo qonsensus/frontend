@@ -29,6 +29,15 @@ export interface Peer {
   screenStream?: MediaStream
 }
 
+export interface ScreenShareQualitySettings {
+  width: number
+  height: number
+  fps: number
+  minBitrate: number
+  maxBitrate: number
+  startBitrate: number
+}
+
 export type MediasoupSocket = ReturnType<typeof useMediasoupSocket>
 export const mediasoupKey: InjectionKey<MediasoupSocket> = Symbol('mediasoup')
 
@@ -303,11 +312,12 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
 
   async function startScreenShare() {
     if (!sendTransport) return
+    const settings = callStore.screenShareSettings
     const screenStream = await navigator.mediaDevices.getDisplayMedia({
       video: {
-        width: { ideal: 1920, max: 1920 },
-        height: { ideal: 1080, max: 1080 },
-        frameRate: { ideal: 60, max: 60 },
+        width: { ideal: settings.width, max: settings.width },
+        height: { ideal: settings.height, max: settings.height },
+        frameRate: { ideal: settings.fps, max: settings.fps },
       },
     })
     const screenTrack = screenStream.getVideoTracks()[0]
@@ -328,17 +338,17 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
       },
       encodings: [
         {
-          maxBitrate: 5_000_000, // 5 Mbps ceiling
-          maxFramerate: 60,
+          maxBitrate: settings.maxBitrate * 1000, // 5 Mbps ceiling
+          maxFramerate: settings.fps,
           scaleResolutionDownBy: 1, // explicit 1:1 — mediasoup won't scale further; the 1080p cap is applied at capture
           priority: 'high',
           networkPriority: 'high',
         },
       ],
       codecOptions: {
-        videoGoogleStartBitrate: 2000, // start at 2 Mbps instead of the default ~300 kbps
-        videoGoogleMaxBitrate: 5000, // kbps
-        videoGoogleMinBitrate: 1000, // kbps — prevents the bitrate dropping too low
+        videoGoogleStartBitrate: settings.startBitrate, // start at 2 Mbps instead of the default ~300 kbps
+        videoGoogleMaxBitrate: settings.maxBitrate, // kbps
+        videoGoogleMinBitrate: settings.minBitrate, // kbps — prevents the bitrate dropping too low
       },
     })
     // Handle the user clicking the browser's native "Stop sharing" button

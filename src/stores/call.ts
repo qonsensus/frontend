@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { readonly, ref } from 'vue'
+import type { ScreenShareQualitySettings } from '@/composables/services/useMediasoupSocket.ts'
 
 export interface Peer {
   socketId: string
@@ -20,6 +21,30 @@ export const useCallStore = defineStore('CallStore', () => {
   const isVoiceOn = ref(true)
   const isVideoOn = ref(false)
   const isScreenShareOn = ref(false)
+
+  const screenShareSettings = ref<ScreenShareQualitySettings>({
+    fps: 30,
+    height: 720,
+    width: 1280,
+    maxBitrate: 2500,
+    minBitrate: 1000,
+    startBitrate: 1000,
+  })
+
+  function setScreenShareSettings(settings: ScreenShareQualitySettings) {
+    screenShareSettings.value = settings
+  }
+
+  function resetScreenShareSettings() {
+    screenShareSettings.value = {
+      fps: 30,
+      height: 720,
+      width: 1280,
+      maxBitrate: 2500,
+      minBitrate: 1000,
+      startBitrate: 1000,
+    }
+  }
 
   function setCallState(state: CallState) {
     callState.value = state
@@ -157,5 +182,8 @@ export const useCallStore = defineStore('CallStore', () => {
     toggleScreenShare,
     removeVideoStreamFromPeer,
     removeScreenStreamFromPeer,
+    setScreenShareSettings,
+    resetScreenShareSettings,
+    screenShareSettings: readonly(screenShareSettings),
   }
 })

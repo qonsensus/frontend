@@ -19,14 +19,12 @@
       <VideoOff v-if="!callStore.isVideoOn" />
       <Video v-else />
     </Button>
-    <Button
-      size="icon-lg"
-      :variant="callStore.isScreenShareOn ? 'default' : 'outline'"
-      @click="callStore.toggleScreenShare()"
-    >
-      <ScreenShareOff v-if="!callStore.isScreenShareOn" />
-      <ScreenShare v-else />
-    </Button>
+    <ScreenShareQualityPopover @start-stream="callStore.toggleScreenShare()">
+      <Button size="icon-lg" :variant="callStore.isScreenShareOn ? 'default' : 'outline'">
+        <ScreenShareOff v-if="!callStore.isScreenShareOn" />
+        <ScreenShare v-else />
+      </Button>
+    </ScreenShareQualityPopover>
     <Button size="icon-lg" variant="destructive" @click="disconnect()">
       <Phone />
     </Button>
@@ -50,6 +48,7 @@ import { mediasoupKey } from '@/composables/services/useMediasoupSocket.ts'
 import router from '@/router'
 import { useRoute } from 'vue-router'
 import { useCallStore } from '@/stores/call.ts'
+import ScreenShareQualityPopover from '@/components/ScreenShareQualityPopover.vue'
 
 const mediasoup = inject(mediasoupKey)
 const callStore = useCallStore()
