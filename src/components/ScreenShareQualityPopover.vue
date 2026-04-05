@@ -1,73 +1,82 @@
 <template>
-  <Popover>
+  <Popover v-model:open="open" class="mb-2">
     <PopoverTrigger>
       <slot :as-child="true" />
     </PopoverTrigger>
     <PopoverContent class="w-80 flex flex-col gap-4">
-      <Select
-        class="w-full"
-        v-model="selectedSettings"
-        label="Presets"
-        :default-value="getPreset('standard')"
-      >
-        <SelectTrigger class="w-full">
-          <SelectValue placeholder="Select a preset" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem :value="getPreset('custom')">Custom</SelectItem>
-          <SelectItem :value="getPreset('low')">Low (480p 30fps)</SelectItem>
-          <SelectItem :value="getPreset('standard')">Standard (720p 30fps)</SelectItem>
-          <SelectItem :value="getPreset('high')">High (1080p 30fps)</SelectItem>
-        </SelectContent>
-      </Select>
-      <template v-if="selectedSettings && selectedSettings.isCustom">
-        <Select v-model="selectedSettings.qualitySettings.fps" label="FPS">
+      <template v-if="!store.isScreenShareOn">
+        <Select
+          class="w-full"
+          v-model="selectedSettings"
+          label="Presets"
+          :default-value="getPreset('standard')"
+        >
           <SelectTrigger class="w-full">
-            <SelectValue placeholder="Select FPS" />
+            <SelectValue placeholder="Select a preset" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem :value="30">30 fps</SelectItem>
-            <SelectItem :value="60">60 fps</SelectItem>
+            <SelectItem :value="getPreset('custom')">Custom</SelectItem>
+            <SelectItem :value="getPreset('low')">Low (480p 30fps)</SelectItem>
+            <SelectItem :value="getPreset('standard')">Standard (720p 30fps)</SelectItem>
+            <SelectItem :value="getPreset('high')">High (1080p 30fps)</SelectItem>
           </SelectContent>
         </Select>
-        <Select v-model="selectedSettings.qualitySettings.resolution" label="Resolution">
-          <SelectTrigger class="w-full">
-            <SelectValue placeholder="Select a resolution" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem :value="480">480p</SelectItem>
-            <SelectItem :value="720">720p</SelectItem>
-            <SelectItem :value="1080">1080p</SelectItem>
-          </SelectContent>
-        </Select>
-        <div class="flex gap-2">
-          <Select v-model="selectedSettings.qualitySettings.minBitrate" label="Min Bitrate (mbps)">
+        <template v-if="selectedSettings && selectedSettings.isCustom">
+          <Select v-model="selectedSettings.qualitySettings.fps" label="FPS">
             <SelectTrigger class="w-full">
-              <SelectValue placeholder="Select bitrate" />
+              <SelectValue placeholder="Select FPS" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem :value="1000">1000 mbps</SelectItem>
-              <SelectItem :value="2000">2000 mbps</SelectItem>
-              <SelectItem :value="3000">3000 mbps</SelectItem>
-              <SelectItem :value="4000">4000 mbps</SelectItem>
-              <SelectItem :value="5000">5000 mbps</SelectItem>
+              <SelectItem :value="30">30 fps</SelectItem>
+              <SelectItem :value="60">60 fps</SelectItem>
             </SelectContent>
           </Select>
-          <Select v-model="selectedSettings.qualitySettings.maxBitrate" label="Max Bitrate (kbps)">
+          <Select v-model="selectedSettings.qualitySettings.resolution" label="Resolution">
             <SelectTrigger class="w-full">
-              <SelectValue placeholder="Select bitrate" />
+              <SelectValue placeholder="Select a resolution" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem :value="1000">1000 mbit/s</SelectItem>
-              <SelectItem :value="2000">2000 mbit/s</SelectItem>
-              <SelectItem :value="3000">3000 mbit/s</SelectItem>
-              <SelectItem :value="4000">4000 mbit/s</SelectItem>
-              <SelectItem :value="5000">5000 mbit/s</SelectItem>
+              <SelectItem :value="480">480p</SelectItem>
+              <SelectItem :value="720">720p</SelectItem>
+              <SelectItem :value="1080">1080p</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+          <div class="flex gap-2">
+            <Select
+              v-model="selectedSettings.qualitySettings.minBitrate"
+              label="Min Bitrate (mbps)"
+            >
+              <SelectTrigger class="w-full">
+                <SelectValue placeholder="Select bitrate" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem :value="1000">1000 mbps</SelectItem>
+                <SelectItem :value="2000">2000 mbps</SelectItem>
+                <SelectItem :value="3000">3000 mbps</SelectItem>
+                <SelectItem :value="4000">4000 mbps</SelectItem>
+                <SelectItem :value="5000">5000 mbps</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              v-model="selectedSettings.qualitySettings.maxBitrate"
+              label="Max Bitrate (kbps)"
+            >
+              <SelectTrigger class="w-full">
+                <SelectValue placeholder="Select bitrate" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem :value="1000">1000 mbit/s</SelectItem>
+                <SelectItem :value="2000">2000 mbit/s</SelectItem>
+                <SelectItem :value="3000">3000 mbit/s</SelectItem>
+                <SelectItem :value="4000">4000 mbit/s</SelectItem>
+                <SelectItem :value="5000">5000 mbit/s</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </template>
+        <Button class="w-full" @click="startStream()"> Start </Button>
       </template>
-      <Button class="w-full" @click="startStream()"> Start </Button>
+      <Button v-else class="w-full" variant="destructive" @click="stopStream()"> Stop </Button>
     </PopoverContent>
   </Popover>
 </template>
@@ -101,6 +110,7 @@ interface QualityPreset {
   isCustom: boolean
 }
 
+const open = ref<boolean>(false)
 const store = useCallStore()
 const emits = defineEmits<{
   (e: 'startStream'): void
@@ -208,5 +218,11 @@ function startStream() {
 
   store.setScreenShareSettings(settings)
   emits('startStream')
+  open.value = false
+}
+
+function stopStream() {
+  store.disableScreenShare()
+  open.value = false
 }
 </script>
