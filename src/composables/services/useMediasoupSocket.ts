@@ -360,8 +360,10 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
   async function stopScreenShare() {
     if (!screenShareProducer) return
     screenShareProducer.close()
+    const producerId = screenShareProducer.id
     screenShareProducer = null
     callStore.removeLocalScreenStream()
+    socket?.emitWithAck('closeProducer', { roomId, producerId })
   }
 
   // endregion
