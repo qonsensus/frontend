@@ -71,6 +71,23 @@ export function useFriendsService() {
     return data.value
   }
 
+  async function searchFriendsByDisplayName(
+    displayName: string,
+    top: number = 20,
+    page: number = 1,
+  ): Promise<components['schemas']['FriendshipListItemDto'][]> {
+    const client = useApi(true)
+    const queryParams = new URLSearchParams()
+    queryParams.set('query', displayName)
+    queryParams.set('top', top.toString())
+    queryParams.set('page', page.toString())
+    const { data } = await client(`/friends/search?${queryParams.toString()}`)
+      .get()
+      .json<components['schemas']['FriendshipListItemDto'][]>()
+    if (!data.value) throw new Error('No friends data')
+    return data.value
+  }
+
   return {
     getFriends,
     getOutgoingFriendRequests,
