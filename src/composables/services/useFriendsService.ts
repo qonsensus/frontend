@@ -95,5 +95,6 @@ export function useFriendsService() {
     sendFriendRequest,
     acceptFriendRequest,
     declineFriendRequest,
+    searchFriendsByDisplayName,
   }
 }
