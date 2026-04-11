@@ -100,6 +100,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/friends/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search for friends by display name for the authenticated user with pagination.
+         * @description This endpoint allows the authenticated user to search for friends by their display name. The user's ID is extracted from the request object, and the search query is provided as a query parameter. The `top` query parameter specifies the number of friends to return per page (default is 20), and the `page` query parameter specifies the page number to retrieve (default is 1). The response includes an array of friendship list items that match the search query, each containing information about a friend.
+         */
+        get: operations["FriendsController_searchFriends"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/friends/outgoing": {
         parameters: {
             query?: never;
@@ -638,6 +658,30 @@ export interface operations {
     FriendsController_getMyFriends: {
         parameters: {
             query: {
+                top: number;
+                page: number;
+                getAll: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FriendshipListItemDto"][];
+                };
+            };
+        };
+    };
+    FriendsController_searchFriends: {
+        parameters: {
+            query: {
+                query: string;
                 top: number;
                 page: number;
             };

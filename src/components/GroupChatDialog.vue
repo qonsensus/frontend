@@ -8,14 +8,14 @@
         </DialogDescription>
       </DialogHeader>
       <div class="flex flex-col gap-5">
-        <Input
-          v-model="searchValue"
-          placeholder="Search friends by display name..."
-          class="w-full"
-        />
+        <Input placeholder="Search friends..." v-model="searchValue" />
         <ScrollArea class="h-100">
           <div class="flex flex-col gap-2">
-            <ProfileCard v-for="option in friendOptions" :profile="option.friendProfile" small>
+            <ProfileCard
+              v-for="option in filteredFriendOptions"
+              :profile="option.friendProfile"
+              small
+            >
               <Button
                 variant="outline"
                 size="sm"
@@ -42,10 +42,8 @@
 </template>
 
 <script setup lang="ts">
-import { useDebounceFn } from '@vueuse/core'
-import { ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import type { components } from '@/types/dtos.ts'
-import { useFriendsService } from '@/composables/services/useFriendsService.ts'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -55,10 +53,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import ProfileCard from '@/components/ProfileCard.vue'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
+import { useFriendsService } from '@/composables/services/useFriendsService.ts'
 
 const searchValue = ref<string>('')
 const open = ref(true)
@@ -67,19 +66,30 @@ const model = defineModel<components['schemas']['FriendshipListItemDto'][]>({
   default: () => [],
 })
 
-const { searchFriendsByDisplayName } = useFriendsService()
+const filteredFriendOptions = computed(() => {
+  if (!searchValue.value || searchValue.value === '') return friendOptions.value
+  return friendOptions.value.filter((option) =>
+    option.friendProfile?.displayName?.toLowerCase().startsWith(searchValue.value.toLowerCase()),
+  )
+})
 
-const search = useDebounceFn(async (value: string) => {
-  if (!value || value.length < 1) return
-  friendOptions.value = await searchFriendsByDisplayName(value)
-}, 150)
+onMounted(async () => {
+  friendOptions.value = await useFriendsService().getFriends(20, 1, true)
+})
 
-watch(searchValue, (value) => search(value))
+watch(open, async (val) => {
+  if (!val) return
+  friendOptions.value = await useFriendsService().getFriends(20, 1, true)
+})
 
 function selectOption(option: components['schemas']['FriendshipListItemDto']) {
-  model.value = [...model.value, option]
+  if (!model.value.some((item) => item.id === option.id)) {
+    model.value = [...model.value, option]
+  }
 }
+
 function deselectOption(option: components['schemas']['FriendshipListItemDto']) {
+  console.log('Removing option:', option)
   model.value = model.value.filter((item) => item.id !== option.id)
 }
 </script>
