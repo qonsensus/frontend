@@ -18,7 +18,6 @@
     </ResizablePanelGroup>
   </div>
   <Toaster position="top-right" />
-  <GroupChatDialog />
 </template>
 
 <script setup lang="ts">
@@ -27,7 +26,6 @@ import { Toaster } from '@/components/ui/sonner'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { useRoute } from 'vue-router'
 import { computed } from 'vue'
-import GroupChatDialog from '@/components/GroupChatDialog.vue'
 
 const route = useRoute()
 

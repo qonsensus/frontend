@@ -32,6 +32,7 @@
         </InputGroupButton>
       </InputGroupAddon>
     </InputGroup>
+    <CreateGroupChatButton />
     <AddFriendButton />
   </div>
 </template>
@@ -51,6 +52,7 @@ import { useFriendsStore } from '@/stores/friends.ts'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import CreateGroupChatButton from '@/components/CreateGroupChatButton.vue'
 
 const { incomingFriendRequests } = storeToRefs(useFriendsStore())
 const incomingFriendRequestCount = computed(() => incomingFriendRequests.value?.length || 0)

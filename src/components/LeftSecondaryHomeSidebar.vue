@@ -12,7 +12,7 @@
         :key="conversation.id"
         :class="{
           'p-2 rounded-md cursor-pointer transition duration-150 hover:bg-accent': true,
-          'bg-primary/10': conversation.id === selectedConversationId,
+          'bg-primary/10': conversation.id === store.currentlyOpenChatId,
         }"
         @click="$router.push(`/chat/${conversation.id}`)"
       >
@@ -40,16 +40,9 @@ import { Search } from 'lucide-vue-next'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { useRoute } from 'vue-router'
-import { computed } from 'vue'
 import { useChatStore } from '@/stores/chat.ts'
 
 const store = useChatStore()
-const params = useRoute().params
-
-const selectedConversationId = computed<string | undefined>(() => {
-  return store.chats.find((c) => c.id === params.conversationId)?.id
-})
 </script>
 
 <style scoped></style>

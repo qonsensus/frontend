@@ -1,5 +1,5 @@
 <template>
-  <Card class="py-3" v-if="profile">
+  <Card class="py-3 transition-colors" :class="{ 'bg-accent': focused }" v-if="profile">
     <CardContent class="flex items-center px-3" :class="{ ['gap-3']: small, ['gap-4']: !small }">
       <Avatar :class="{ ['w-10 h-10']: small, ['w-16 h-16']: !small }" v-if="!noAvatar">
         <AvatarImage :src="profile.avatarUrl || ''" />
@@ -41,10 +41,12 @@ withDefaults(
     profile: components['schemas']['Profile'] | null
     noAvatar?: boolean
     small?: boolean
+    focused?: boolean
   }>(),
   {
     noAvatar: false,
     small: false,
+    focused: false,
   },
 )
 </script>
