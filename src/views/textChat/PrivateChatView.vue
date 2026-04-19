@@ -15,6 +15,7 @@ watch(
   () => route.params.conversationId,
   async (newVal, oldVal) => {
     if (newVal && oldVal !== newVal) {
+      store.setCurrentlyOpenChat(route.params.conversationId as string)
       await store.fetchChatMessages(newVal as string, new Date())
     }
   },
