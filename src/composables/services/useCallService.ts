@@ -7,7 +7,10 @@ import { Device } from 'mediasoup-client'
 import type { Consumer, Producer, Transport } from 'mediasoup-client/types'
 import { useDenoisedAudio } from '@/composables/useDenoisedAudio.ts'
 import type { JoinRoomResponseWsDto } from '@/types/callTypes/joinRoomResponseWs.dto.ts'
-import { onUnmounted, watch } from 'vue'
+import { type InjectionKey, onUnmounted, watch } from 'vue'
+
+export type CallService = ReturnType<typeof useCallService>
+export const callKey: InjectionKey<CallService> = Symbol('callService')
 
 export function useCallService(roomId: string) {
   const { peers, isVoiceOn, isVideoOn, isScreenShareOn } = storeToRefs(useCallStore())

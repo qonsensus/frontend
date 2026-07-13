@@ -10,16 +10,16 @@ import CallParticipants from '@/components/CallParticipants.vue'
 import CallControls from '@/components/CallControls.vue'
 import { useRoute } from 'vue-router'
 import { onMounted, provide } from 'vue'
-import { useMediasoupSocket, mediasoupKey } from '@/composables/services/useMediasoupSocket.ts'
+import { useCallService, callKey } from '@/composables/services/useCallService.ts'
 
 const route = useRoute()
 const callId = route.params.conversationId as string
-const mediasoup = useMediasoupSocket(callId)
+const callService = useCallService(callId)
 
-provide(mediasoupKey, mediasoup)
+provide(callKey, callService)
 
 onMounted(async () => {
-  await mediasoup.connect()
+  await callService.connect()
 })
 </script>
 
