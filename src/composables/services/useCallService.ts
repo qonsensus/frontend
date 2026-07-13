@@ -164,8 +164,8 @@ export function useCallService(roomId: string) {
     // region Consume existing
 
     for (const { producers, socketId } of joinAck.otherPeers) {
-      for (const [_, producer] of producers) {
-        await consume(producer.id, socketId, roomId)
+      for (const producer of producers) {
+        await consume(producer, socketId, roomId)
       }
     }
     callStore.addPeer({
