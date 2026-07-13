@@ -7,8 +7,9 @@ import { Device } from 'mediasoup-client'
 import type { Consumer, Producer, Transport } from 'mediasoup-client/types'
 import { useDenoisedAudio } from '@/composables/useDenoisedAudio.ts'
 import type { JoinRoomResponseWsDto } from '@/types/callTypes/joinRoomResponseWs.dto.ts'
+import { onUnmounted, watch } from 'vue'
 
-export function useCallService() {
+export function useCallService(roomId: string) {
   const { peers, isVoiceOn, isVideoOn, isScreenShareOn } = storeToRefs(useCallStore())
   const callStore = useCallStore()
 
@@ -19,10 +20,10 @@ export function useCallService() {
   let sendTransport: Transport | null = null
   let recvTransport: Transport | null = null
   let audioProducer: Producer | null = null
-  const videoProducer: Producer | null = null
-  const screenShareProducer: Producer | null = null
+  let videoProducer: Producer | null = null
+  let screenShareProducer: Producer | null = null
 
-  async function connect(roomId: string | undefined) {
+  async function connect() {
     // region Init
 
     callStore.resetState()
@@ -35,16 +36,13 @@ export function useCallService() {
       },
     })
 
-    // set a default room ID if none is provided
-    if (!roomId) {
-      roomId = crypto.randomUUID()
-    }
-
     // init device
     device = new Device()
 
     // join room
-    const joinAck: JoinRoomResponseWsDto = await socket.emitWithAck('joinRoom', { roomId })
+    const joinAck: JoinRoomResponseWsDto = await socket.emitWithAck('joinRoom', {
+      roomId: roomId,
+    })
     await device.load({ routerRtpCapabilities: joinAck.rtpCapabilities })
 
     const sendOpts = await socket.emitWithAck('createTransport', { roomId: roomId })
@@ -236,5 +234,172 @@ export function useCallService() {
         console.warn('Consumer:', consumer)
       }
     }
+  }
+
+  // region Voice
+
+  watch(isVoiceOn, (newVal) => {
+    if (newVal) void unmute()
+    else void mute()
+  })
+
+  async function mute() {
+    if (!audioProducer) return
+    audioProducer.pause()
+  }
+
+  async function unmute() {
+    if (!audioProducer) return
+    audioProducer.resume()
+  }
+
+  // endregion
+
+  // region Video
+
+  watch(isVideoOn, (newVal) => {
+    if (newVal) void startVideo()
+    else void stopVideo()
+  })
+
+  async function startVideo() {
+    if (!sendTransport) return
+    const videoStream = await navigator.mediaDevices.getUserMedia({
+      video: { aspectRatio: { ideal: 16 / 9 } },
+    })
+    callStore.setLocalVideoStream(videoStream)
+    const vp9Codec = device!.recvRtpCapabilities.codecs?.find(
+      (c) => c.mimeType.toLowerCase() === 'video/vp9',
+    )
+    videoProducer = await sendTransport.produce({
+      track: videoStream.getVideoTracks()[0],
+      ...(vp9Codec ? { codec: vp9Codec } : {}),
+      appData: {
+        source: 'camera',
+      },
+    })
+  }
+
+  async function stopVideo() {
+    if (!videoProducer) return
+    const producerId = videoProducer.id
+    videoProducer.close()
+    videoProducer = null
+    callStore.removeLocalVideoStream()
+    socket?.emitWithAck('closeProducer', { roomId, producerId })
+  }
+
+  // endregion
+
+  // region Screen Share
+
+  watch(isScreenShareOn, (newVal) => {
+    if (newVal) void startScreenShare()
+    else void stopScreenShare()
+  })
+
+  async function startScreenShare() {
+    if (!sendTransport) return
+    const settings = callStore.screenShareSettings
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: {
+        width: { ideal: settings.width, max: settings.width },
+        height: { ideal: settings.height, max: settings.height },
+        frameRate: { ideal: settings.fps, max: settings.fps },
+      },
+    })
+    const screenTrack = screenStream.getVideoTracks()[0]
+    if (!screenTrack) {
+      screenStream.getTracks().forEach((t) => t.stop())
+      return
+    }
+    callStore.setLocalScreenStream(screenStream)
+    const vp9Codec = device!.recvRtpCapabilities.codecs?.find(
+      (c) => c.mimeType.toLowerCase() === 'video/vp9',
+    )
+    if (!vp9Codec) throw new Error('VP9 codec not supported by the mediasoup router')
+    screenShareProducer = await sendTransport.produce({
+      track: screenTrack,
+      codec: vp9Codec,
+      appData: {
+        source: 'screen',
+      },
+      encodings: [
+        {
+          maxBitrate: settings.maxBitrate * 1000, // 5 Mbps ceiling
+          maxFramerate: settings.fps,
+          scaleResolutionDownBy: 1, // explicit 1:1 — mediasoup won't scale further; the 1080p cap is applied at capture
+          priority: 'high',
+          networkPriority: 'high',
+        },
+      ],
+      codecOptions: {
+        videoGoogleStartBitrate: settings.startBitrate, // start at 2 Mbps instead of the default ~300 kbps
+        videoGoogleMaxBitrate: settings.maxBitrate, // kbps
+        videoGoogleMinBitrate: settings.minBitrate, // kbps — prevents the bitrate dropping too low
+      },
+    })
+    // Handle the user clicking the browser's native "Stop sharing" button
+    screenTrack.addEventListener('ended', () => {
+      stopScreenShare()
+    })
+  }
+
+  async function stopScreenShare() {
+    if (!screenShareProducer) return
+    screenShareProducer.close()
+    const producerId = screenShareProducer.id
+    screenShareProducer = null
+    callStore.removeLocalScreenStream()
+    socket?.emitWithAck('closeProducer', { roomId, producerId })
+  }
+
+  // endregion
+
+  // region Disconnect
+
+  function disconnect() {
+    // Close all consumers
+    for (const consumer of consumers.values()) {
+      consumer.close()
+    }
+    consumers.clear()
+
+    // Close producers
+    audioProducer?.close()
+    audioProducer = null
+    videoProducer?.close()
+    videoProducer = null
+    screenShareProducer?.close()
+    screenShareProducer = null
+
+    // Stop local media tracks
+    callStore.removeLocalScreenStream()
+    callStore.removeLocalVideoStream()
+
+    // Close transports
+    sendTransport?.close()
+    sendTransport = null
+    recvTransport?.close()
+    recvTransport = null
+
+    // Disconnect socket
+    socket?.disconnect()
+    socket = null
+    device = null
+
+    callStore.resetState()
+  }
+
+  // Auto-cleanup when the component using this composable is unmounted
+  onUnmounted(() => {
+    disconnect()
+  })
+
+  // endregion
+
+  return {
+    connect,
+    disconnect,
   }
 }
