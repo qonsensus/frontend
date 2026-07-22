@@ -43,4 +43,20 @@ export function useNotificationSocket() {
     }
     useChatStore().addChat(chat)
   })
+
+  socket.on('incomingCall', (data: components['schemas']['IncomingCallWsDto']) => {
+    toast.info('Incoming call!', {
+      description: `You have an incoming call from ${data.callerDisplayName}.`,
+      dismissible: true,
+      cancel: {
+        label: 'Dismiss',
+      },
+      action: {
+        label: 'Answer',
+        onClick: async () => {
+          await router.push(`/private-call/${data.chatId}`)
+        },
+      },
+    })
+  })
 }
