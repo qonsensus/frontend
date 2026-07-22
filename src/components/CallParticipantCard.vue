@@ -8,7 +8,9 @@
         <video ref="videoEl" autoplay playsinline class="w-full h-full object-contain" />
       </div>
       <div class="px-2 py-1 absolute top-0 left-0 w-full bg-black/50 backdrop-blur-sm">
-        <p class="text-sm text-white/60 select-none">{{ peer.socketId ?? 'Participant' }}</p>
+        <p class="text-sm text-white/60 select-none">
+          {{ peer.userProfile.displayName ?? 'Participant' }}
+        </p>
       </div>
     </template>
     <div
