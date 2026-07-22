@@ -553,6 +553,15 @@ export interface components {
             chatId: string;
             message: string;
         };
+        OtherPeerDto: {
+            socketId: string;
+            userProfile: components["schemas"]["Profile"];
+            producers: string[];
+        };
+        JoinRoomResponseWsDto: {
+            rtpCapabilities: Record<string, never>;
+            otherPeers: components["schemas"]["OtherPeerDto"][];
+        };
     };
     responses: never;
     parameters: never;

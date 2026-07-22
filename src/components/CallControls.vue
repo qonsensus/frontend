@@ -44,18 +44,18 @@ import {
   ScreenShareOff,
   Phone,
 } from 'lucide-vue-next'
-import { mediasoupKey } from '@/composables/services/useMediasoupSocket.ts'
 import router from '@/router'
 import { useRoute } from 'vue-router'
 import { useCallStore } from '@/stores/call.ts'
 import ScreenShareQualityPopover from '@/components/ScreenShareQualityPopover.vue'
+import { callKey } from '@/composables/services/useCallService.ts'
 
-const mediasoup = inject(mediasoupKey)
+const callService = inject(callKey)
 const callStore = useCallStore()
 const route = useRoute()
 
 function disconnect() {
-  mediasoup?.disconnect()
+  callService?.disconnect()
   router.push({ name: 'Chat', params: { conversationId: route.params.conversationId } })
 }
 </script>

@@ -1,54 +1,25 @@
+import { storeToRefs } from 'pinia'
+import { useCallStore } from '@/stores/call.ts'
 import { io, type Socket } from 'socket.io-client'
 import { config } from '@/config.ts'
 import { useAuthToken } from '@/composables/utils/useAuthToken.ts'
-import {
-  type Consumer,
-  type Producer,
-  type RtpCapabilities,
-  type Transport,
-} from 'mediasoup-client/types'
 import { Device } from 'mediasoup-client'
-import { onUnmounted, type Ref, type InjectionKey, watch } from 'vue'
+import type { Consumer, Producer, Transport } from 'mediasoup-client/types'
 import { useDenoisedAudio } from '@/composables/useDenoisedAudio.ts'
-import { useCallStore } from '@/stores/call.ts'
-import { storeToRefs } from 'pinia'
+import type { JoinRoomResponseWsDto } from '@/types/callTypes/joinRoomResponseWs.dto.ts'
+import { type InjectionKey, onUnmounted, watch } from 'vue'
+import { useUserStore } from '@/stores/user.ts'
+import type { components } from '@/types/dtos.ts'
 
-interface JoinRoomAck {
-  rtpCapabilities: RtpCapabilities
-  existingProducers: { producerId: string; socketId: string; kind: string }[]
-}
+export type CallService = ReturnType<typeof useCallService>
+export const callKey: InjectionKey<CallService> = Symbol('callService')
 
-export interface Peer {
-  socketId: string
-  isLocal: boolean
-  audioProducerId?: string
-  videoProducerId?: string
-  screenProducerId?: string
-  audioStream?: MediaStream
-  videoStream?: MediaStream
-  screenStream?: MediaStream
-}
-
-export interface ScreenShareQualitySettings {
-  width: number
-  height: number
-  fps: number
-  minBitrate: number
-  maxBitrate: number
-  startBitrate: number
-}
-
-export type MediasoupSocket = ReturnType<typeof useMediasoupSocket>
-export const mediasoupKey: InjectionKey<MediasoupSocket> = Symbol('mediasoup')
-
-export function useMediasoupSocket(roomId: Ref<string> | string) {
-  const resolvedRoomId = typeof roomId === 'string' ? roomId : roomId.value
-
-  // Reactive state
+export function useCallService(roomId: string) {
   const { peers, isVoiceOn, isVideoOn, isScreenShareOn } = storeToRefs(useCallStore())
   const callStore = useCallStore()
 
-  // Internal state (non-reactive)
+  const consumers = new Map<string, Consumer>()
+
   let socket: Socket | null = null
   let device: Device | null = null
   let sendTransport: Transport | null = null
@@ -56,32 +27,43 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
   let audioProducer: Producer | null = null
   let videoProducer: Producer | null = null
   let screenShareProducer: Producer | null = null
-  const consumers = new Map<string, Consumer>()
 
   async function connect() {
+    // region Init
+
     callStore.resetState()
-    socket = io(`${config.apiUrl}/mediasoup`, {
+
+    // initialize socket connection
+    socket = io(`${config.apiUrl}/call`, {
       transports: ['websocket'],
       auth: {
         token: useAuthToken().getToken(),
       },
     })
 
+    // init device
     device = new Device()
 
-    const joinAck: JoinRoomAck = await socket.emitWithAck('joinRoom', { roomId: resolvedRoomId })
+    // join room
+    const joinAck: JoinRoomResponseWsDto = await socket.emitWithAck('joinRoom', {
+      roomId: roomId,
+    })
     await device.load({ routerRtpCapabilities: joinAck.rtpCapabilities })
 
-    const sendOpts = await socket.emitWithAck('createTransport', { roomId: resolvedRoomId })
-    const recvOpts = await socket.emitWithAck('createTransport', { roomId: resolvedRoomId })
+    const sendOpts = await socket.emitWithAck('createTransport', { roomId: roomId })
+    const recvOpts = await socket.emitWithAck('createTransport', { roomId: roomId })
 
     sendTransport = device.createSendTransport(sendOpts)
     recvTransport = device.createRecvTransport(recvOpts)
 
+    // endregion
+
+    // region Transport events
+
     sendTransport.on('connect', async ({ dtlsParameters }, callback, errback) => {
       await socket!
         .emitWithAck('connectTransport', {
-          roomId: resolvedRoomId,
+          roomId: roomId,
           transportId: sendTransport!.id,
           dtlsParameters,
         })
@@ -92,7 +74,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     recvTransport.on('connect', async ({ dtlsParameters }, callback, errback) => {
       await socket!
         .emitWithAck('connectTransport', {
-          roomId: resolvedRoomId,
+          roomId: roomId,
           transportId: recvTransport!.id,
           dtlsParameters,
         })
@@ -102,7 +84,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
 
     sendTransport.on('produce', async ({ kind, rtpParameters, appData }, callback) => {
       const { producerId } = await socket!.emitWithAck('produce', {
-        roomId: resolvedRoomId,
+        roomId: roomId,
         transportId: sendTransport!.id,
         kind,
         rtpParameters,
@@ -111,16 +93,24 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
       callback({ id: producerId })
     })
 
-    const { stream: denoisedStream, setVadThreshold } = await useDenoisedAudio()
-    setVadThreshold(0.6)
-    const track = denoisedStream.getAudioTracks()[0]
-    audioProducer = await sendTransport.produce({ track })
-
     // Listen for new producers from other peers
     socket.on(
       'newProducer',
-      async ({ producerId, socketId }: { producerId: string; socketId: string }) => {
-        await consume(producerId, socketId)
+      async ({
+        producerId,
+        socketId,
+        userProfile,
+      }: {
+        producerId: string
+        socketId: string
+        userProfile: components['schemas']['Profile']
+      }) => {
+        useCallStore().addPeer({
+          isLocal: false,
+          socketId: socketId,
+          userProfile,
+        })
+        await consume(producerId, socketId, roomId)
       },
     )
 
@@ -152,7 +142,7 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
         }
       }
 
-      callStore.removePeer(peer)
+      callStore.removePeerById(peer.socketId)
     })
 
     socket.on(
@@ -175,11 +165,37 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
       },
     )
 
-    // Consume existing producers
-    for (const { producerId, socketId } of joinAck.existingProducers) {
-      await consume(producerId, socketId)
+    // endregion
+
+    // region Noise cancelling
+
+    const { stream: denoisedStream, setVadThreshold } = await useDenoisedAudio()
+    setVadThreshold(0.6)
+    const track = denoisedStream.getAudioTracks()[0]
+    audioProducer = await sendTransport.produce({ track })
+
+    // endregion
+
+    // region Consume existing
+
+    for (const { producers, socketId, userProfile } of joinAck.otherPeers) {
+      callStore.addPeer({
+        userProfile,
+        socketId,
+        isLocal: false,
+        audioProducerId: undefined,
+        videoProducerId: undefined,
+        screenProducerId: undefined,
+        audioStream: undefined,
+        videoStream: undefined,
+        screenStream: undefined,
+      })
+      for (const producer of producers) {
+        await consume(producer, socketId, roomId)
+      }
     }
     callStore.addPeer({
+      userProfile: useUserStore().user!,
       socketId: socket.id! + ' (YOU)',
       isLocal: true,
       audioProducerId: undefined,
@@ -190,13 +206,15 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
       screenStream: undefined,
     })
     callStore.setCallState('in-call')
+
+    // endregion
   }
 
-  async function consume(producerId: string, socketId: string) {
+  async function consume(producerId: string, socketId: string, roomId: string) {
     if (!recvTransport || !socket || !device) return
 
     const params = await socket.emitWithAck('consume', {
-      roomId: resolvedRoomId,
+      roomId: roomId,
       transportId: recvTransport.id,
       producerId,
       rtpCapabilities: device.recvRtpCapabilities,
@@ -212,18 +230,14 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
     consumers.set(producerId, consumer)
 
     await socket.emitWithAck('resumeConsumer', {
-      roomId: resolvedRoomId,
+      roomId: roomId,
       consumerId: params.consumerId,
     })
 
-    // Get or create remote peer entry
-    let peer = callStore.getPeer(socketId)
+    // make sure that peer exists before continuing
+    const peer = callStore.getPeer(socketId)
     if (!peer) {
-      callStore.addPeer({
-        socketId,
-        isLocal: false,
-      })
-      peer = callStore.getPeer(socketId)!
+      throw new Error(`Peer does not exist! ${socketId}`)
     }
 
     if (consumer.kind === 'audio') {
@@ -368,6 +382,8 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
 
   // endregion
 
+  // region Disconnect
+
   function disconnect() {
     // Close all consumers
     for (const consumer of consumers.values()) {
@@ -405,6 +421,8 @@ export function useMediasoupSocket(roomId: Ref<string> | string) {
   onUnmounted(() => {
     disconnect()
   })
+
+  // endregion
 
   return {
     connect,
