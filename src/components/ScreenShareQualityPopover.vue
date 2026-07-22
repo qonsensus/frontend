@@ -93,7 +93,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import type { ScreenShareQualitySettings } from '@/composables/services/useMediasoupSocket.ts'
+import type { ScreenShareQualitySettings } from '@/types/callTypes/screenSHareQualitySetting.ts'
 
 interface QualitySettings {
   fps: 30 | 60

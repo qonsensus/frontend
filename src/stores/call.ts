@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { readonly, ref } from 'vue'
-import type { ScreenShareQualitySettings } from '@/composables/services/useMediasoupSocket.ts'
 import type { components } from '@/types/dtos.ts'
+import type { ScreenShareQualitySettings } from '@/types/callTypes/screenSHareQualitySetting.ts'
 
 export interface Peer {
   userProfile: components['schemas']['Profile']

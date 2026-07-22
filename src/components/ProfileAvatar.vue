@@ -24,7 +24,7 @@ import { User } from 'lucide-vue-next'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { components } from '@/types/dtos.ts'
 
-const {} = withDefaults(
+withDefaults(
   defineProps<{
     size?: 'small' | 'default' | 'large'
     profile: components['schemas']['Profile']
