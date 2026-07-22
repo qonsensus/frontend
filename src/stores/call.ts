@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
 import { readonly, ref } from 'vue'
 import type { ScreenShareQualitySettings } from '@/composables/services/useMediasoupSocket.ts'
+import type { components } from '@/types/dtos.ts'
 
 export interface Peer {
+  userProfile: components['schemas']['Profile']
   socketId: string
   isLocal: boolean
   audioProducerId?: string
@@ -56,6 +58,10 @@ export const useCallStore = defineStore('CallStore', () => {
 
   function addPeer(peer: Peer) {
     peers.value.set(peer.socketId, peer)
+  }
+
+  function removePeerById(socketId: string) {
+    peers.value.delete(socketId)
   }
 
   function removePeer(peer: Peer) {
@@ -166,6 +172,7 @@ export const useCallStore = defineStore('CallStore', () => {
     getPeer,
     addPeer,
     removePeer,
+    removePeerById,
     muteVoice,
     unmuteVoice,
     enableVideo,

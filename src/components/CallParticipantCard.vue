@@ -16,7 +16,9 @@
       class="flex-1 flex items-center justify-center aspect-video"
       :class="[`${props.small ? 'h-32' : 'h-64'}`]"
     >
-      <p class="text-sm text-white/60 select-none">{{ peer.socketId ?? 'Participant' }}</p>
+      <p class="text-sm text-white/60 select-none">
+        {{ peer.userProfile?.displayName ?? 'Participant' }}
+      </p>
     </div>
     <Button
       v-if="hasScreenShare"
@@ -37,10 +39,10 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { type Peer } from '@/composables/services/useMediasoupSocket.ts'
 import { useAudioLevel } from '@/composables/useAudioLevel.ts'
 import { Button } from '@/components/ui/button'
 import { ScreenShare } from 'lucide-vue-next'
+import type { Peer } from '@/stores/call.ts'
 
 const props = defineProps<{
   peer: Peer

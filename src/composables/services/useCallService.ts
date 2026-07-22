@@ -8,6 +8,8 @@ import type { Consumer, Producer, Transport } from 'mediasoup-client/types'
 import { useDenoisedAudio } from '@/composables/useDenoisedAudio.ts'
 import type { JoinRoomResponseWsDto } from '@/types/callTypes/joinRoomResponseWs.dto.ts'
 import { type InjectionKey, onUnmounted, watch } from 'vue'
+import { useUserStore } from '@/stores/user.ts'
+import type { components } from '@/types/dtos.ts'
 
 export type CallService = ReturnType<typeof useCallService>
 export const callKey: InjectionKey<CallService> = Symbol('callService')
@@ -94,7 +96,20 @@ export function useCallService(roomId: string) {
     // Listen for new producers from other peers
     socket.on(
       'newProducer',
-      async ({ producerId, socketId }: { producerId: string; socketId: string }) => {
+      async ({
+        producerId,
+        socketId,
+        userProfile,
+      }: {
+        producerId: string
+        socketId: string
+        userProfile: components['schemas']['Profile']
+      }) => {
+        useCallStore().addPeer({
+          isLocal: false,
+          socketId: socketId,
+          userProfile,
+        })
         await consume(producerId, socketId, roomId)
       },
     )
@@ -127,7 +142,7 @@ export function useCallService(roomId: string) {
         }
       }
 
-      callStore.removePeer(peer)
+      callStore.removePeerById(peer.socketId)
     })
 
     socket.on(
@@ -163,12 +178,24 @@ export function useCallService(roomId: string) {
 
     // region Consume existing
 
-    for (const { producers, socketId } of joinAck.otherPeers) {
+    for (const { producers, socketId, userProfile } of joinAck.otherPeers) {
+      callStore.addPeer({
+        userProfile,
+        socketId,
+        isLocal: false,
+        audioProducerId: undefined,
+        videoProducerId: undefined,
+        screenProducerId: undefined,
+        audioStream: undefined,
+        videoStream: undefined,
+        screenStream: undefined,
+      })
       for (const producer of producers) {
         await consume(producer, socketId, roomId)
       }
     }
     callStore.addPeer({
+      userProfile: useUserStore().user!,
       socketId: socket.id! + ' (YOU)',
       isLocal: true,
       audioProducerId: undefined,
@@ -207,14 +234,10 @@ export function useCallService(roomId: string) {
       consumerId: params.consumerId,
     })
 
-    // Get or create remote peer entry
-    let peer = callStore.getPeer(socketId)
+    // make sure that peer exists before continuing
+    const peer = callStore.getPeer(socketId)
     if (!peer) {
-      callStore.addPeer({
-        socketId,
-        isLocal: false,
-      })
-      peer = callStore.getPeer(socketId)!
+      throw new Error(`Peer does not exist! ${socketId}`)
     }
 
     if (consumer.kind === 'audio') {
