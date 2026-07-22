@@ -13,9 +13,10 @@
     </template>
     <div
       v-else
-      class="flex-1 flex items-center justify-center aspect-video"
+      class="flex-1 flex flex-col items-center justify-center aspect-video gap-4"
       :class="[`${props.small ? 'h-32' : 'h-64'}`]"
     >
+      <ProfileAvatar :profile="peer.userProfile" size="large" />
       <p class="text-sm text-white/60 select-none">
         {{ peer.userProfile?.displayName ?? 'Participant' }}
       </p>
@@ -43,6 +44,7 @@ import { useAudioLevel } from '@/composables/useAudioLevel.ts'
 import { Button } from '@/components/ui/button'
 import { ScreenShare } from 'lucide-vue-next'
 import type { Peer } from '@/stores/call.ts'
+import ProfileAvatar from '@/components/ProfileAvatar.vue'
 
 const props = defineProps<{
   peer: Peer
