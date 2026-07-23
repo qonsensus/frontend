@@ -562,6 +562,11 @@ export interface components {
             rtpCapabilities: Record<string, never>;
             otherPeers: components["schemas"]["OtherPeerDto"][];
         };
+        IncomingCallWsDto: {
+            chatId: string;
+            callerAvatarUrl: string;
+            callerDisplayName: string;
+        };
     };
     responses: never;
     parameters: never;

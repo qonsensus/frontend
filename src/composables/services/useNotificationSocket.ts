@@ -7,6 +7,7 @@ import router from '@/router'
 import { config } from '@/config.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import type { ChatDto } from '@/composables/services/useChatService.ts'
+import { useIncomingCallDialog } from '@/stores/incomingCallDialog.ts'
 
 export function useNotificationSocket() {
   const socket = io(config.apiUrl, {
@@ -42,5 +43,9 @@ export function useNotificationSocket() {
       typing: false,
     }
     useChatStore().addChat(chat)
+  })
+
+  socket.on('incomingCall', (data: components['schemas']['IncomingCallWsDto']) => {
+    useIncomingCallDialog().notifyIncomingCall(data)
   })
 }
