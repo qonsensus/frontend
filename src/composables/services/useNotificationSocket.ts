@@ -7,6 +7,7 @@ import router from '@/router'
 import { config } from '@/config.ts'
 import { useChatStore } from '@/stores/chat.ts'
 import type { ChatDto } from '@/composables/services/useChatService.ts'
+import { useIncomingCallDialog } from '@/stores/incomingCallDialog.ts'
 
 export function useNotificationSocket() {
   const socket = io(config.apiUrl, {
@@ -45,18 +46,6 @@ export function useNotificationSocket() {
   })
 
   socket.on('incomingCall', (data: components['schemas']['IncomingCallWsDto']) => {
-    toast.info('Incoming call!', {
-      description: `You have an incoming call from ${data.callerDisplayName}.`,
-      dismissible: true,
-      cancel: {
-        label: 'Dismiss',
-      },
-      action: {
-        label: 'Answer',
-        onClick: async () => {
-          await router.push(`/private-call/${data.chatId}`)
-        },
-      },
-    })
+    useIncomingCallDialog().notifyIncomingCall(data)
   })
 }
